@@ -15,25 +15,12 @@ TO-DO:
 #Format is SELECT variable_name, FROM library.file
 #All are shown in the variable descriptions section in WRDS
 
-#You can put multiple variables after SELECT to get both at once.
-data1 = db.raw_sql('SELECT age FROM risk.rmdirectors')
-dataframe = pd.DataFrame(data=data1)
-#print(dataframe)
 
+#Size (org summary) & Diversity
+OrgSummary = pd.DataFrame(data=(db.raw_sql('SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix FROM boardex.na_wrds_org_summary')))
 
-#Size (org summary)
-NumDirectors = pd.DataFrame(data=(db.raw_sql('SELECT Ticker, NumberDirectors FROM boardex.na_wrds_org_summary')))
-#print(NumDirectors)
-
-#%Independent Directors
-IndepDirectors = pd.DataFrame(data=(db.raw_sql('SELECT TICKER, CLASSIFICATION FROM risk.rmdirectors')))
-#print(IndepDirectors)
-
-
-#I think best way to combine these is using the ticker symbol in each dataset
-merged_df = pd.merge(NumDirectors, IndepDirectors, on='ticker', how='inner')
-#print(merged_df)
-
+#%Independent Directors & Shares held & CEO Duality
+DirectorsUS = pd.DataFrame(data=(db.raw_sql('SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, EMPLOYMENT_CEO, EMPLOYMENT_CHAIRMAN FROM risk.rmdirectors')))
 
 #Number of Committees
 NumCommittees = pd.DataFrame(data=(db.raw_sql('SELECT TICKER, AUDIT_MEMBERSHIP, CG_MEMBERSHIP, COMP_MEMBERSHIP, NOM_MEMBERSHIP FROM risk.rmdirectors')))
@@ -55,5 +42,9 @@ VotingType = pd.merge(DualClass, VoteType, on='ticker', how='inner')
 
 
 #Meeting frequency
-MeetingFreq = pd.DataFrame(data=(db.raw_sql('SELECT TICKER, NUMMTGS FROM comp.codirfin')))
-print(MeetFreq)
+MeetingFreq = pd.DataFrame(data=(db.raw_sql('SELECT TICKER, NUMMTGS FROM comp_execucomp.codirfin')))
+print(MeetingFreq)
+
+
+merged_df = pd.merge(OrgSummary, DirectorsUS, on='ticker', how='inner')
+#print(merged_df)
