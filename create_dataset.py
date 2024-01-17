@@ -16,21 +16,13 @@ def output_excel_file(database, filename):
 
 
 def count_committees(dataframe):
+  companyCounted = set()
   for index, row in dataframe.iterrows():
-      count = 0
-      name = row['ticker']
-      if (row['audit_membership'] != None):
-        count += 1
-      if row['cg_membership'] != None:
-        count += 1
-      if row['comp_membership'] != None:
-        count += 1
-      if row['nom_membership'] != None:
-        count += 1
-      
+    if row['ticker'] not in companyCounted:
+      count = sum(1 for membership in [row['audit_membership'], row['cg_membership'], row['comp_membership'], row['nom_membership']] if membership is not None)
+
 
 def read_in_data_from_wrds():
-
   query = '''
   SELECT g.TICKER, g.MEETINGDATE, g.MTGMONTH, g.YEAR, g.DUALCLASS, e.NUMMTGS, e.YEAR
   FROM risk.rmgovernance g
