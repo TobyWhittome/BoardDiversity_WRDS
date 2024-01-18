@@ -49,7 +49,6 @@ def is_CEO_Dual():
         com_data.append({'ticker': row['ticker'], 'CEODuality': True})
       else:
         com_data.append({'ticker': row['ticker'], 'CEODuality': False})
-  print(pd.DataFrame(com_data))
   return pd.DataFrame(com_data)
                 
 
@@ -69,13 +68,15 @@ def read_in_data_from_wrds():
 
   #Size (org summary) & Diversity ... need to add Annualreportdate BETWEEN 2023-01-01 AND 2024-01-15
   OrgSummary = pd.DataFrame(data=(db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{year_ago_date}' AND '{today_date}' AND TICKER IN {SP500List}")))
-  #print(OrgSummary)
+  newSummary = OrgSummary.drop_duplicates()
+  #print(newSummary)
+  #output_excel_file(newSummary, 'orgstaff1.xlsx')
 
   
 
   #%Independent Directors & Shares held & CEO Duality & Number of committees & Voting type
-  DirectorsUS = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, EMPLOYMENT_CEO, EMPLOYMENT_CHAIRMAN, OWNLESS1, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
-
+  DirectorsUS = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, OWNLESS1, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
+  #output_excel_file(DirectorsUS, 'directorsUS.xlsx')
 
 
 
@@ -87,8 +88,8 @@ read_in_data_from_wrds()
 #output_excel_file(merged_data, 'mergedata.xlsx')
 #output_excel_file(ceo, 'ceoDuality.xlsx')
 dataframe = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, EMPLOYMENT_CEO, EMPLOYMENT_CHAIRMAN, YEAR, meetingdate, NAME, FULLNAME FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
-print(dataframe)
-output_excel_file(dataframe, 'ceoDuality2.xlsx')
+#print(dataframe)
+#output_excel_file(dataframe, 'ceoDuality2.xlsx')
 
 
 end = time.time()
