@@ -17,16 +17,20 @@ def output_excel_file(database, filename):
 
 def count_committees(dataframe):
   companyCounted = set()
+  com_data = []
   for index, row in dataframe.iterrows():
     if row['ticker'] not in companyCounted:
       count = sum(1 for membership in [row['audit_membership'], row['cg_membership'], row['comp_membership'], row['nom_membership']] if membership is not None)
-
+      com_data.append({'ticker': row['ticker'], 'NumCommittees': count})
+      companyCounted.add(row['ticker'])
+  return pd.DataFrame(com_data)
 
 def read_in_data_from_wrds():
-  query = '''
+  query = f'''
   SELECT g.TICKER, g.MEETINGDATE, g.MTGMONTH, g.YEAR, g.DUALCLASS, e.NUMMTGS, e.YEAR
   FROM risk.rmgovernance g
-  JOIN comp_execucomp.codirfin e ON g.TICKER = e.TICKER
+  JOIN comp_execucomp.codirfin e ON g.TICKER = e.TICKER AND e.YEAR = g.YEAR
+  WHERE g.YEAR BETWEEN 2023 AND 2024 AND g.TICKER IN {SP500List}
   '''
   merged_data = pd.DataFrame(data=(db.raw_sql(query)))
   print(merged_data)
@@ -36,9 +40,8 @@ def read_in_data_from_wrds():
   #%Independent Directors & Shares held & CEO Duality & Number of committees & Voting type
   DirectorsUS = pd.DataFrame(data=(db.raw_sql(f'SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, EMPLOYMENT_CEO, EMPLOYMENT_CHAIRMAN, AUDIT_MEMBERSHIP, CG_MEMBERSHIP, COMP_MEMBERSHIP, NOM_MEMBERSHIP, OWNLESS1, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN 2023 AND 2024 AND TICKER IN {SP500List}')))
   count_committees(DirectorsUS)
-  Governance = pd.DataFrame(data=(db.raw_sql('SELECT TICKER, DUALCLASS FROM risk.rmgovernance WHERE YEAR BETWEEN 2023 AND 2024')))
-  Execucomp = pd.DataFrame(data=(db.raw_sql('SELECT TICKER, NUMMTGS, YEAR FROM comp_execucomp.codirfin')))
-
+  Governance = pd.DataFrame(data=(db.raw_sql(f'SELECT TICKER, DUALCLASS FROM risk.rmgovernance WHERE YEAR BETWEEN 2023 AND 2024 AND TICKER IN {SP500List}')))
+  Execucomp = pd.DataFrame(data=(db.raw_sql(f'SELECT TICKER, NUMMTGS FROM comp_execucomp.codirfin WHERE YEAR BETWEEN 2023 AND 2024 AND TICKER IN {SP500List}')))
 
 #output_excel_file(DirectorsUS, 'rmdirectors.xlsx')
 #output_excel_file(NumCommittees, 'rmdirectors2.xlsx')
