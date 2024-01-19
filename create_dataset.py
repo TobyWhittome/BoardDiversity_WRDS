@@ -63,7 +63,7 @@ def read_in_data_from_wrds():
   WHERE g.YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND g.TICKER IN {SP500List}
   '''
   merged_data = pd.DataFrame(data=(db.raw_sql(query)))
-  #print(merged_data)
+  print(merged_data)
 
 
   #Size (org summary) & Diversity ... need to add Annualreportdate BETWEEN 2023-01-01 AND 2024-01-15
@@ -84,9 +84,7 @@ SP500List = get_SP500_companies()
 today_date, year_ago_date, thisyear, lastyear = get_dates()
 count_committees()
 ceo = is_CEO_Dual()
-read_in_data_from_wrds()
-#output_excel_file(merged_data, 'mergedata.xlsx')
-#output_excel_file(ceo, 'ceoDuality.xlsx')
+dataframe = read_in_data_from_wrds()
 dataframe = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, EMPLOYMENT_CEO, EMPLOYMENT_CHAIRMAN, YEAR, meetingdate, NAME, FULLNAME FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
 #print(dataframe)
 #output_excel_file(dataframe, 'ceoDuality2.xlsx')
