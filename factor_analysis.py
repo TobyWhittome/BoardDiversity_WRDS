@@ -3,27 +3,32 @@
 import pandas as pd
 from factor_analyzer import FactorAnalyzer
 import matplotlib.pyplot as plt
+from pydataset import data
+import create_dataset
 
 # Load your dataset
-data = pd.read_csv('your_dataset.csv')
+
+df = create_dataset.read_in_data_from_wrds()
+df = df.iloc[1:15]
+X = df[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
+
 
 # Drop any rows with missing values
-data = data.dropna()
+#data = data.dropna()
 
 # Extract the features (variables) you want to include in the factor analysis
 # Assume 'features' is a list of column names in your dataset
-features = ['var1', 'var2', 'var3', '...']
+#features = ['var1', 'var2', 'var3', '...']
 
 # Subset the dataset with selected features
-subset_data = data[features]
+#subset_data = data[features]
 
 # Initialize the factor analyzer with the desired number of factors
 # You can adjust the number of factors based on your analysis
-num_factors = 3
-fa = FactorAnalyzer(n_factors=num_factors, rotation=None) 
+fa = FactorAnalyzer(n_factors=3, rotation=None) 
 
 # Fit the model to the data
-fa.fit(subset_data)
+fa.fit(X)
 
 # Get the factor loadings
 loadings = fa.loadings_
