@@ -27,7 +27,7 @@ def output_excel_file(database, filename):
 def count_committees():
   dataframe = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, AUDIT_MEMBERSHIP, CG_MEMBERSHIP, COMP_MEMBERSHIP, NOM_MEMBERSHIP FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
   membership_columns = ['audit_membership', 'cg_membership', 'comp_membership', 'nom_membership']
-  total_df = dataframe.groupby('ticker')[membership_columns].apply(lambda x: (x.notna().sum() > 0).sum()).reset_index(name='total_memberships_gt_0')
+  total_df = dataframe.groupby('ticker')[membership_columns].apply(lambda x: (x.notna().sum() > 0).sum()).reset_index(name='total_memberships')
   return total_df
 
 
@@ -44,14 +44,22 @@ def is_CEO_Dual():
         com_data.append({'ticker': row['ticker'], 'CEODuality': False})
   return pd.DataFrame(com_data)
 
+
 def director_power():
   #%Independent Directors & Shares held & CEO Duality & Number of committees & Voting type
-  DirectorsUS = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, OWNLESS1, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
+  dataframe = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, OWNLESS1, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
+  print(dataframe)
 
-  #Count if any directors have above 4.5% share individually -ownless I think.
-  #Count if any directors have above ...% voting power.
+  
+  #Count if any directors have above 4.5% share individually .
+  #Count if any directors have above ...% voting power. Director holds <1% Voting Power -- is ownless
   #Count percentage of company the board holds. - NUM_OF_SHARES
-  #Count number of independent directors using CLASSIFICATION and make a percentage.
+
+
+  #Count number of independent directors using CLASSIFICATION and make a percentage. -- Board affiliation (E-employee/insider; I-Independent; L-linked; NA-not ascertainable) (classification) -- I-NED = Independent Non-Exec director
+  num_independent_directors = dataframe.groupby('ticker')['classification'].apply(lambda x: round((x == ('I-NED' or 'I' or 'NI-NED')).sum() / len(x) *100, 1)).reset_index(name='percentage_NEDs')
+
+  
 
 
 
@@ -81,6 +89,7 @@ def read_in_data_from_wrds():
 def combine_data(dataframe):
   committees = count_committees()
   ceo = is_CEO_Dual()
+  director_powerful = director_power()
   ceo_and_committees = pd.merge(committees, ceo, on='ticker', how='inner')
   total_dataset = pd.merge(ceo_and_committees, dataframe, on='ticker', how='inner')
   return total_dataset
