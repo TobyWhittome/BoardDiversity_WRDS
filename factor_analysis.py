@@ -3,18 +3,17 @@
 import pandas as pd
 from factor_analyzer import FactorAnalyzer
 import matplotlib.pyplot as plt
-#from pydataset import data
 import create_dataset
 
 # Load your dataset
-
-df = create_dataset.read_in_data_from_wrds()
+df = create_dataset.main()
+print(df)
 df = df.iloc[1:15]
-X = df[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
+X = df[['total_memberships', 'CEODuality','percentage_NEDs']]
 
 
 # Drop any rows with missing values
-#data = data.dropna()
+#data = df.dropna()
 
 # Extract the features (variables) you want to include in the factor analysis
 # Assume 'features' is a list of column names in your dataset

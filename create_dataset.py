@@ -52,22 +52,26 @@ class myData:
   def director_power(self):
     #%Independent Directors & Shares held & Number of committees & Voting type
     dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, OWNLESS1, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500List}")))
-    print(dataframe)
+    #print(dataframe)
 
-    
-    #Count if any directors have above 4.5% share individually. -- I need total company shares for a %.. find on WRDS somewhere
+    #Legacy data unfort
+    dataframe2 = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, sumaflin FROM block.block WHERE TICKER IN {self.SP500List}")))
+    print(dataframe2)
+    #Count if any directors have above 4.5% share individually. -- I need total company shares for a %..
     #Count percentage of company the board holds. - NUM_OF_SHARES
+    #mtgdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND
 
 
-    #Count if any directors have above ...% voting power. Director holds <1% Voting Power -- is ownless -- could use either
-    voting_power = dataframe.groupby('ticker')['pcnt_ctrl_votingpower'].apply(lambda x: (x >= 10).sum()).reset_index(name='high_voting_power')
+    result_df = dataframe.groupby('ticker').agg(
 
-    #Count number of independent directors using CLASSIFICATION and make a percentage. -- Board affiliation (E-employee/insider; I-Independent; L-linked; NA-not ascertainable) (classification) -- I-NED = Independent Non-Exec director
-    num_independent_directors = dataframe.groupby('ticker')['classification'].apply(lambda x: round((x == ('I-NED' or 'I' or 'NI-NED')).sum() / len(x) *100, 1)).reset_index(name='percentage_NEDs')
+    high_voting_power=('pcnt_ctrl_votingpower', lambda x: (x >= 10).sum()),
+    percentage_NEDs=('classification', lambda x: round((x.isin(['I-NED', 'I', 'NI-NED'])).mean() * 100, 1))
 
-    
+    ).reset_index()
 
+    return result_df
 
+  
 
   def read_in_data_from_wrds(self):
 
@@ -82,7 +86,6 @@ class myData:
     merged_data = pd.DataFrame(data=(self.db.raw_sql(query)))
     #print(merged_data)
 
-    
     #Only has 84 rows instead of 500...
     OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500List}")))
     newSummary = OrgSummary.drop_duplicates()
@@ -96,8 +99,7 @@ class myData:
     committees = self.count_committees()
     ceo = self.is_CEO_Dual()
     director_powerful = self.director_power()
-    ceo_and_committees = pd.merge(committees, ceo, on='ticker', how='inner')
-    total_dataset = pd.merge(ceo_and_committees, dataframe, on='ticker', how='inner')
+    total_dataset = pd.merge(pd.merge(pd.merge(director_powerful, committees, on='ticker', how='inner'), ceo, on='ticker', how='inner'), dataframe, on='ticker', how='inner')
     return total_dataset
 
 
@@ -121,8 +123,8 @@ def main():
   return final_dataset
 
 
-
-
 if __name__ == "__main__":
   print(main())
+  #main()
+
 
