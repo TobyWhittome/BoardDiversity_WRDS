@@ -3,7 +3,7 @@
 import pandas as pd
 from factor_analyzer import FactorAnalyzer
 import matplotlib.pyplot as plt
-from pydataset import data
+#from pydataset import data
 import create_dataset
 
 # Load your dataset

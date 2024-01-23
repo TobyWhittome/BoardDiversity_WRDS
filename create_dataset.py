@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import time
 import datetime
-import seaborn as sns
+
 
 def get_dates():
   today = datetime.date.today()
@@ -57,11 +57,11 @@ def director_power():
   #Count percentage of company the board holds. - NUM_OF_SHARES
   #Count number of independent directors using CLASSIFICATION and make a percentage.
 
-                
+
 
 def read_in_data_from_wrds():
 
-  #Company Database
+  """ #Company Database
   query = f'''
   SELECT g.TICKER, g.YEAR, g.DUALCLASS, e.NUMMTGS, e.YEAR
   FROM risk.rmgovernance g
@@ -69,18 +69,29 @@ def read_in_data_from_wrds():
   ON g.TICKER = e.TICKER AND e.YEAR = g.YEAR
   WHERE g.YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND g.TICKER IN {SP500List}
   '''
+
+  from sqlalchemy import create_engine, text
+  engine = create_engine('postgresql://user:password@localhost/dbname')
+  with engine.connect() as connection:
+    result = connection.execute(text("SELECT * FROM my_table"))
+    for row in result:
+        print(row) 
+
+  #engine = db.engine
+  #merged_data = pd.read_sql_query(query, engine)
   merged_data = pd.DataFrame(data=(db.raw_sql(query)))
   print(merged_data)
-
-
+ """
+  
   #Size (org summary) & Diversity ... need to add Annualreportdate BETWEEN 2023-01-01 AND 2024-01-15
-  OrgSummary = pd.DataFrame(data=(db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{year_ago_date}' AND '{today_date}' AND TICKER IN {SP500List}")))
-  newSummary = OrgSummary.drop_duplicates()
+  OrgSummary = pd.read_sql_query(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary")
+  #OrgSummary = pd.DataFrame(data=(db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary")))
+  #WHERE Annualreportdate BETWEEN '{year_ago_date}' AND '{today_date}' AND TICKER IN {SP500List}")))
+  #newSummary = OrgSummary.drop_duplicates()
   #print(newSummary)
   #output_excel_file(newSummary, 'orgstaff1.xlsx')
-
-  return merged_data
-
+ 
+  return OrgSummary
 
 
 def combine_data(dataframe):
@@ -92,10 +103,8 @@ def combine_data(dataframe):
 
 
 
-
-
 start = time.time()
-db = wrds.Connection(wrds_username="twhittome")
+db = wrds.Connection(wrds_username="tessbailie1")
 
 SP500List = get_SP500_companies()
 today_date, year_ago_date, thisyear, lastyear = get_dates()
