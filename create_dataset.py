@@ -46,15 +46,17 @@ def is_CEO_Dual():
 
 
 def director_power():
-  #%Independent Directors & Shares held & CEO Duality & Number of committees & Voting type
+  #%Independent Directors & Shares held & Number of committees & Voting type
   dataframe = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, OWNLESS1, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
   print(dataframe)
 
   
-  #Count if any directors have above 4.5% share individually .
-  #Count if any directors have above ...% voting power. Director holds <1% Voting Power -- is ownless
+  #Count if any directors have above 4.5% share individually. -- I need total company shares for a %.. find on WRDS somewhere
   #Count percentage of company the board holds. - NUM_OF_SHARES
 
+
+  #Count if any directors have above ...% voting power. Director holds <1% Voting Power -- is ownless -- could use either
+  voting_power = dataframe.groupby('ticker')['pcnt_ctrl_votingpower'].apply(lambda x: (x >= 10).sum()).reset_index(name='high_voting_power')
 
   #Count number of independent directors using CLASSIFICATION and make a percentage. -- Board affiliation (E-employee/insider; I-Independent; L-linked; NA-not ascertainable) (classification) -- I-NED = Independent Non-Exec director
   num_independent_directors = dataframe.groupby('ticker')['classification'].apply(lambda x: round((x == ('I-NED' or 'I' or 'NI-NED')).sum() / len(x) *100, 1)).reset_index(name='percentage_NEDs')
@@ -109,4 +111,5 @@ final_dataset = combine_data(dataframe)
 end = time.time()
 print("The time of execution of above program is :",
       (end-start) * 10**3, "ms")
+
 
