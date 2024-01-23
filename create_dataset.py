@@ -26,16 +26,12 @@ def output_excel_file(database, filename):
 
 def count_committees():
   dataframe = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, AUDIT_MEMBERSHIP, CG_MEMBERSHIP, COMP_MEMBERSHIP, NOM_MEMBERSHIP FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
-  companyCounted = set()
-  com_data = []
-  for index, row in dataframe.iterrows():
-    if row['ticker'] not in companyCounted:
-      count = sum(1 for membership in [row['audit_membership'], row['cg_membership'], row['comp_membership'], row['nom_membership']] if membership is not None)
-      com_data.append({'ticker': row['ticker'], 'NumCommittees': count})
-      companyCounted.add(row['ticker'])
-  return pd.DataFrame(com_data)
+  membership_columns = ['audit_membership', 'cg_membership', 'comp_membership', 'nom_membership']
+  total_df = dataframe.groupby('ticker')[membership_columns].apply(lambda x: (x.notna().sum() > 0).sum()).reset_index(name='total_memberships_gt_0')
+  return total_df
 
 
+#Has multiple companies which have more than one CEO shown.
 def is_CEO_Dual():
   dataframe = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, EMPLOYMENT_CEO, EMPLOYMENT_CHAIRMAN FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
   #dataframe = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, EMPLOYMENT_CEO, EMPLOYMENT_CHAIRMAN, YEAR, meetingdate, NAME, FULLNAME FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
@@ -61,7 +57,7 @@ def director_power():
 
 def read_in_data_from_wrds():
 
-  """ #Company Database
+  #Company Database
   query = f'''
   SELECT g.TICKER, g.YEAR, g.DUALCLASS, e.NUMMTGS, e.YEAR
   FROM risk.rmgovernance g
@@ -69,29 +65,17 @@ def read_in_data_from_wrds():
   ON g.TICKER = e.TICKER AND e.YEAR = g.YEAR
   WHERE g.YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND g.TICKER IN {SP500List}
   '''
-
-  from sqlalchemy import create_engine, text
-  engine = create_engine('postgresql://user:password@localhost/dbname')
-  with engine.connect() as connection:
-    result = connection.execute(text("SELECT * FROM my_table"))
-    for row in result:
-        print(row) 
-
-  #engine = db.engine
-  #merged_data = pd.read_sql_query(query, engine)
   merged_data = pd.DataFrame(data=(db.raw_sql(query)))
-  print(merged_data)
- """
+  #print(merged_data)
+
   
-  #Size (org summary) & Diversity ... need to add Annualreportdate BETWEEN 2023-01-01 AND 2024-01-15
-  OrgSummary = pd.read_sql_query(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary")
-  #OrgSummary = pd.DataFrame(data=(db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary")))
-  #WHERE Annualreportdate BETWEEN '{year_ago_date}' AND '{today_date}' AND TICKER IN {SP500List}")))
-  #newSummary = OrgSummary.drop_duplicates()
+  #Only has 84 rows instead of 500...
+  OrgSummary = pd.DataFrame(data=(db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{year_ago_date}' AND '{today_date}' AND Ticker IN {SP500List}")))
+  newSummary = OrgSummary.drop_duplicates()
   #print(newSummary)
-  #output_excel_file(newSummary, 'orgstaff1.xlsx')
+  
  
-  return OrgSummary
+  return merged_data
 
 
 def combine_data(dataframe):
@@ -104,7 +88,7 @@ def combine_data(dataframe):
 
 
 start = time.time()
-db = wrds.Connection(wrds_username="tessbailie1")
+db = wrds.Connection(wrds_username="twhittome")
 
 SP500List = get_SP500_companies()
 today_date, year_ago_date, thisyear, lastyear = get_dates()
