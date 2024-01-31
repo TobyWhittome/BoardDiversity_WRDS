@@ -33,10 +33,15 @@ class myData:
 
 
   def count_committees(self):
-    dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, AUDIT_MEMBERSHIP, CG_MEMBERSHIP, COMP_MEMBERSHIP, NOM_MEMBERSHIP FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
+    dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, AUDIT_MEMBERSHIP, CG_MEMBERSHIP, COMP_MEMBERSHIP, NOM_MEMBERSHIP, YEAR, CUSIP FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
+
+    boardsize = dataframe.groupby('ticker').size().reset_index(name='boardsize')
     membership_columns = ['audit_membership', 'cg_membership', 'comp_membership', 'nom_membership']
-    total_df = dataframe.groupby('ticker')[membership_columns].apply(lambda x: (x.notna().sum() > 0).sum()).reset_index(name='total_memberships')
-    return total_df
+    total_memberships = dataframe.groupby('ticker')[membership_columns].apply(lambda x: (x.notna().sum() > 0).sum()).reset_index(name='total_memberships')
+
+    return pd.merge(total_memberships, boardsize, on='ticker', how='inner')
+
+  
 
 
   #Has multiple companies which have more than one CEO shown.
@@ -45,15 +50,12 @@ class myData:
     CEO_list = 'Chairman/CEO', 'Chairman/President/CEO'
     dataframeCEO = pd.DataFrame(data=(self.db.raw_sql(f"SELECT CompanyID, RoleName FROM boardex.na_wrds_dir_profile_emp WHERE DateEndRole BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND RoleName IN {CEO_list} AND CompanyID IN {self.SP500IDs}")))
     dataframeCEO['rolename'].replace(to_replace=CEO_list, value=1, inplace=True)
-    print(dataframeCEO)
+    #print(dataframeCEO)
     #now need the other 447 companies to have a zero in that place.
     # -- this is not representitive as a percentage.
 
 
-    
-
     dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, EMPLOYMENT_CEO, EMPLOYMENT_CHAIRMAN FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
-    #dataframe = pd.DataFrame(data=(db.raw_sql(f"SELECT TICKER, EMPLOYMENT_CEO, EMPLOYMENT_CHAIRMAN, YEAR, meetingdate, NAME, FULLNAME FROM risk.rmdirectors WHERE YEAR BETWEEN '{lastyear}' AND '{thisyear}' AND TICKER IN {SP500List}")))
     com_data = []
     ticker = 0
     for index, row in dataframe.iterrows():
@@ -64,9 +66,12 @@ class myData:
         else:
           com_data.append({'ticker': row['ticker'], 'CEODuality': False})
     print(pd.DataFrame(com_data))
-    print(ticker)
+    #print(ticker)
     #should be roughly 44%, so 327/790 = 41% -- is better
     return pd.DataFrame(com_data)
+
+  #def gender_ratio(self):
+    # OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
 
 
   def director_power(self):
@@ -82,7 +87,6 @@ class myData:
     #Count percentage of company the board holds. - NUM_OF_SHARES
     #mtgdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND
 
-
     result_df = dataframe.groupby('ticker').agg(
 
     high_voting_power=('pcnt_ctrl_votingpower', lambda x: (x >= 10).sum()),
@@ -93,10 +97,8 @@ class myData:
     return result_df
 
   
-
   def read_in_data_from_wrds(self):
 
-    #Company Database
     query = f'''
     SELECT g.TICKER, g.YEAR, g.DUALCLASS, e.NUMMTGS, e.YEAR
     FROM risk.rmgovernance g
@@ -104,17 +106,8 @@ class myData:
     ON g.TICKER = e.TICKER AND e.YEAR = g.YEAR
     WHERE g.YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND g.TICKER IN {self.SP500Tickers}
     '''
-    merged_data = pd.DataFrame(data=(self.db.raw_sql(query)))
-    #print(merged_data)
-
-    #Only has 84 rows instead of 500...
-    OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
-    newSummary = OrgSummary.drop_duplicates()
-    #print(newSummary)
+    return pd.DataFrame(data=(self.db.raw_sql(query)))
     
-  
-    return merged_data
-
 
   def combine_data(self, dataframe):
     committees = self.count_committees()
@@ -135,8 +128,7 @@ def main():
 
   dataframe = inst.read_in_data_from_wrds()
   final_dataset = inst.combine_data(dataframe)
-
-  #output_excel_file(final_dataset, 'orgstaff1.xlsx')
+  #inst.output_excel_file(final_dataset, 'orgstaff1.xlsx')
 
   end = time.time()
   print("The time of execution of above program is :",
