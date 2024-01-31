@@ -83,9 +83,13 @@ class myData:
     dataframe2 = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, sumaflin FROM block.block WHERE TICKER IN {self.SP500Tickers}")))
     #print(dataframe2)
 
+
     #Count if any directors have above 4.5% share individually. -- I need total company shares for a %..
     #Count percentage of company the board holds. - NUM_OF_SHARES
-    #mtgdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND
+
+    dataframe3 = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, SHROWN_TOT_PCT, SHROWN_EXCL_OPTS_PCT, EXEC_FULLNAME FROM comp_execucomp.anncomp WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
+    print(dataframe3)
+    self.output_excel_file(dataframe3, 'sharestest.xlsx')
 
     result_df = dataframe.groupby('ticker').agg(
 
