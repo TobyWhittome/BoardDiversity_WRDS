@@ -61,10 +61,10 @@ class myData:
     for index, row in dataframe.iterrows():
       if row['employment_ceo'] == 'Yes':
         if row['employment_chairman'] == 'Yes':
-          com_data.append({'ticker': row['ticker'], 'CEODuality': True})
+          com_data.append({'ticker': row['ticker'], 'CEODuality': 1})
           ticker += 1
         else:
-          com_data.append({'ticker': row['ticker'], 'CEODuality': False})
+          com_data.append({'ticker': row['ticker'], 'CEODuality': 0})
     print(pd.DataFrame(com_data))
     #print(ticker)
     #should be roughly 44%, so 327/790 = 41% -- is better
@@ -100,14 +100,17 @@ class myData:
   def read_in_data_from_wrds(self):
 
     query = f'''
-    SELECT g.TICKER, g.YEAR, g.DUALCLASS, e.NUMMTGS, e.YEAR
+    SELECT g.TICKER, g.DUALCLASS
     FROM risk.rmgovernance g
     JOIN comp_execucomp.codirfin e 
     ON g.TICKER = e.TICKER AND e.YEAR = g.YEAR
     WHERE g.YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND g.TICKER IN {self.SP500Tickers}
     '''
-    return pd.DataFrame(data=(self.db.raw_sql(query)))
+    dataframe = pd.DataFrame(data=(self.db.raw_sql(query)))
+    dataframe['dualclass'].replace(to_replace='YES', value=1, inplace=True)
+    dataframe['dualclass'].fillna(0, inplace=True)
     
+    return dataframe
 
   def combine_data(self, dataframe):
     committees = self.count_committees()
