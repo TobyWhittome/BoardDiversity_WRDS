@@ -1,0 +1,73 @@
+# Airflow VM and Docker Setup Instructions
+
+Directories map:
+
+- `/home`: User home directories.
+    - `/airflow`: Directory for Airflow configurations and files
+
+## Detailed Descriptions
+
+- **airflow.cfg**: Central configuration file for Airflow, defining global settings, executor types, database connections, and more.
+- **airflow_docker/**: Houses Dockerfiles and other necessary configurations to containerize Airflow, facilitating deployment and scaling.
+- **dags/**: The core directory where all Airflow DAGs are defined and stored, you need to upload your own dag here and will be able to see it in airflow webserver after 5 mins. 
+  - **models/**: Stores  machine learning models that DAGs might employ for prediction tasks.
+  - **src/**: Contains Python scripts with utility functions, tasks, and other logic used by the DAGs.
+- **data/**: A place for any data files that DAGs need to read from or write to during execution.
+- **docker-compose.yml**: Defines and configures the services, networks, and volumes used by Docker to run the Airflow environment.
+- **logs/**: Captures output from task executions, scheduler decisions, and other runtime information, essential for debugging and monitoring.
+- **plugins/**: Extends Airflow's built-in functionalities with custom operators, sensors, hooks, and interfaces.
+
+
+## VM Login:
+
+To access the VM via SSH: 
+ssh username@20.77.80.201
+
+select yes when connecting for first time,
+then type in Password.
+
+
+## File Upload via SFTP:
+
+```sftp airflow@20.77.80.201```
+
+Once connected, use the put command to upload a file:
+```put local_file_path remote_file_path```
+
+To upload a directory:
+```put -r myFolder /remote/path/where/you/want/to/upload```
+
+## Useful Commands:
+Change ownership of a directory:
+```sudo chown -R airflow:airflow /directory-path```
+
+Set permissions for a directory:
+```chmod -R 777 /directory-path```
+
+Enter a Bash session as root:
+```sudo bash```
+
+List running Docker containers:
+```docker ps```
+
+Stop and remove all containers, images, networks, and volumes:
+```
+docker stop $(docker ps -aq)
+docker rm $(docker ps -aq)
+docker rmi $(docker images -q)
+docker network prune -f
+docker volume prune -f
+sudo docker system prune -a
+```
+
+Start an interactive bash session inside the airflow_container:
+```docker exec -it airflow_container bash```
+
+Start or restart Airflow using Docker Compose:
+```
+docker compose down
+docker compose -f docker-compose.yml up -d
+```
+
+
+
