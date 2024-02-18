@@ -65,7 +65,7 @@ class myData:
           ticker += 1
         else:
           com_data.append({'ticker': row['ticker'], 'CEODuality': 0})
-    print(pd.DataFrame(com_data))
+    #print(pd.DataFrame(com_data))
     #print(ticker)
     #should be roughly 44%, so 327/790 = 41% -- is better
     return pd.DataFrame(com_data)
@@ -88,7 +88,7 @@ class myData:
     #Count percentage of company the board holds. - NUM_OF_SHARES
 
     dataframe3 = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, SHROWN_TOT_PCT, SHROWN_EXCL_OPTS_PCT, EXEC_FULLNAME FROM comp_execucomp.anncomp WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
-    print(dataframe3)
+    #print(dataframe3)
     self.output_excel_file(dataframe3, 'sharestest.xlsx')
 
     result_df = dataframe.groupby('ticker').agg(
@@ -145,7 +145,7 @@ def main():
 
 
 if __name__ == "__main__":
-  print(main())
-  #main()
+  #print(main())
+  main()
 
 
