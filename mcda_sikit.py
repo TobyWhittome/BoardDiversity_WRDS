@@ -1,14 +1,7 @@
 from scikitmcda.topsis import TOPSIS
-from scikitmcda.wsm import WSM
-from scikitmcda.wpm import WPM
-from scikitmcda.waspas import WASPAS
-from scikitmcda.promethee_ii import PROMETHEE_II
-from scikitmcda.electre_i import ELECTRE_I
-#from scikitmcda.electre_i import ELECTRE_II
-from scikitmcda.vikor import VIKOR
 from scikitmcda.constants import MAX, MIN, LinearMinMax_, LinearMax_, LinearSum_, Vector_, EnhancedAccuracy_, Logarithmic_ 
 import create_dataset
-import pandas as pd
+
 
 
 topsis = TOPSIS()
