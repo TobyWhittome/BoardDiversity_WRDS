@@ -3,18 +3,20 @@ import pandas as pd
 import os
 import time
 import datetime
+from dateutil.relativedelta import relativedelta
 
 class myData:
 
   def __init__(self):
-    self.SP500Tickers, self.today_date, self.year_ago_date, self.thisyear, self.lastyear, self.db, self.SP500IDs = None, None, None, None, None, None, None
+    self.SP500Tickers, self.today_date, self.year_ago_date, self.month_ago_date, self.thisyear, self.lastyear, self.db, self.SP500IDs, self.SP500_permo = None, None, None, None, None, None, None, None, None
 
   def get_dates(self):
     today = datetime.date.today()
+    one_month_ago = today - relativedelta(months=1)
     thisYear = int(today.strftime("%Y"))
     yearMod = thisYear - 1
     modified_date = today.replace(year=yearMod)
-    return today, modified_date, thisYear, yearMod
+    return today, modified_date, thisYear, yearMod, one_month_ago
 
 
   def get_SP500_companies(self) -> pd.DataFrame:
@@ -23,10 +25,25 @@ class myData:
     return tuple(frame['Ticker'])
   
   def get_SP500_IDs(self):
-    frame = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT boardid FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers}")))
+    # need to change
+    frame = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT boardid FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers}"))) # is the issue that some boardIds overlap?
+    print(len(frame))
     return tuple(frame['boardid'])
+  
+  def get_SP500_permno(self):
+    #Has duplicate IDs
+    id_ticker = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT ticker, boardid FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers}")))
 
-
+    #can't get this to work until SP500 IDs pulls in the right ones.  
+    id_permco = pd.DataFrame(data=(self.db.raw_sql(f"SELECT permco, companyid FROM wrdsapps.bdxcrspcomplink WHERE companyid IN {self.SP500IDs}")))
+    
+    
+    id_permco.rename(columns={'companyid': 'boardid'}, inplace=True)
+    complete_frame = (pd.merge(id_ticker, id_permco, on='boardid', how='inner'))
+    print(complete_frame)
+    return complete_frame
+    
+  
   def output_excel_file(self, database, filename):
     excel_file_path = os.path.join(os.getcwd(), filename)
     database.to_excel(excel_file_path, index=False)
@@ -74,27 +91,30 @@ class myData:
 
 
   def director_power(self):
-    #%Independent Directors & Shares held & Number of committees & Voting type
-    dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, OWNLESS1, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
-    #print(dataframe)
+    
+    #1. Count if any directors have above 4.5% share individually.
+    #2. TotalOf (All Directors share %. = NUM_Shares / Outstanding)
+    
+    #Outstanding shares
+    outstanding_shares = pd.DataFrame(data=(self.db.raw_sql(f"SELECT permno, shrout, shrstartdt FROM crsp_a_stock.stkshares WHERE shrenddt > '{self.year_ago_date}' AND permno IN {self.SP500IDs}")))
+    unique_permnos_df = outstanding_shares.drop_duplicates(subset=['permno']).reset_index(drop=True)
 
-    #Legacy data unfort
-    dataframe2 = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, sumaflin FROM block.block WHERE TICKER IN {self.SP500Tickers}")))
-    #print(dataframe2)
-
-
-    #Count if any directors have above 4.5% share individually. -- I need total company shares for a %..
-    #Count percentage of company the board holds. - NUM_OF_SHARES
+    print(outstanding_shares)
+    print(unique_permnos_df)
+    
+    
 
     dataframe3 = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, SHROWN_TOT_PCT, SHROWN_EXCL_OPTS_PCT, EXEC_FULLNAME FROM comp_execucomp.anncomp WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
     #print(dataframe3)
     self.output_excel_file(dataframe3, 'sharestest.xlsx')
 
-    result_df = dataframe.groupby('ticker').agg(
 
+    #%Independent Directors & Shares held & Number of committees & Voting type
+    dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, OWNLESS1, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
+    
+    result_df = dataframe.groupby('ticker').agg(
     high_voting_power=('pcnt_ctrl_votingpower', lambda x: (x >= 10).sum()),
     percentage_INEDs=('classification', lambda x: round((x.isin(['I-NED', 'I', 'NI-NED'])).mean() * 100, 1))
-
     ).reset_index()
 
     return result_df
@@ -112,6 +132,7 @@ class myData:
     dataframe = pd.DataFrame(data=(self.db.raw_sql(query)))
     dataframe['dualclass'].replace(to_replace='YES', value=1, inplace=True)
     dataframe['dualclass'].fillna(0, inplace=True)
+    dataframe['dualclass'] = dataframe['dualclass'].astype(int)
     
     return dataframe
 
@@ -131,7 +152,8 @@ def main():
   inst.db = wrds.Connection(wrds_username="twhittome")
   inst.SP500Tickers = inst.get_SP500_companies()
   inst.SP500IDs = inst.get_SP500_IDs()
-  inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear = inst.get_dates()
+  inst.SP500_permo = inst.get_SP500_permno()
+  inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date = inst.get_dates()
 
   final_dataset = inst.combine_data()
   #inst.output_excel_file(final_dataset, 'orgstaff1.xlsx')
