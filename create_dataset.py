@@ -41,34 +41,33 @@ class myData:
 
     return pd.merge(total_memberships, boardsize, on='ticker', how='inner')
 
-  
 
-
-  #Has multiple companies which have more than one CEO shown.
   def is_CEO_Dual(self):
-
-    CEO_list = 'Chairman/CEO', 'Chairman/President/CEO'
-    dataframeCEO = pd.DataFrame(data=(self.db.raw_sql(f"SELECT CompanyID, RoleName FROM boardex.na_wrds_dir_profile_emp WHERE DateEndRole BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND RoleName IN {CEO_list} AND CompanyID IN {self.SP500IDs}")))
-    dataframeCEO['rolename'].replace(to_replace=CEO_list, value=1, inplace=True)
-    #print(dataframeCEO)
-    #now need the other 447 companies to have a zero in that place.
-    # -- this is not representitive as a percentage.
-
-
+    # % should be roughly 44%, so 327/790 = 41% -- is good
     dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, EMPLOYMENT_CEO, EMPLOYMENT_CHAIRMAN FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
     com_data = []
-    ticker = 0
     for index, row in dataframe.iterrows():
       if row['employment_ceo'] == 'Yes':
         if row['employment_chairman'] == 'Yes':
           com_data.append({'ticker': row['ticker'], 'CEODuality': 1})
-          ticker += 1
         else:
           com_data.append({'ticker': row['ticker'], 'CEODuality': 0})
-    #print(pd.DataFrame(com_data))
-    #print(ticker)
-    #should be roughly 44%, so 327/790 = 41% -- is better
-    return pd.DataFrame(com_data)
+                  
+    new_com_data = pd.DataFrame(com_data).drop_duplicates().reset_index(drop=True)
+          
+    rows_to_delete = []
+    for index, row in new_com_data.iterrows():
+      if index < len(new_com_data) - 1:  # Ensure we don't go out of bounds
+          next_row = new_com_data.iloc[index + 1]          
+          if row['ticker'] == next_row['ticker']:
+              if row['CEODuality'] == 1:           
+                  rows_to_delete.append(next_row.name)
+              elif next_row['CEODuality'] == 1:                 
+                  rows_to_delete.append(row.name)
+                  
+    new_com_data.drop(rows_to_delete, inplace=True)
+    new_com_data.reset_index(drop=True)
+    return new_com_data
 
   #def gender_ratio(self):
     # OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
@@ -94,14 +93,14 @@ class myData:
     result_df = dataframe.groupby('ticker').agg(
 
     high_voting_power=('pcnt_ctrl_votingpower', lambda x: (x >= 10).sum()),
-    percentage_NEDs=('classification', lambda x: round((x.isin(['I-NED', 'I', 'NI-NED'])).mean() * 100, 1))
+    percentage_INEDs=('classification', lambda x: round((x.isin(['I-NED', 'I', 'NI-NED'])).mean() * 100, 1))
 
     ).reset_index()
 
     return result_df
 
   
-  def read_in_data_from_wrds(self):
+  def dualclass(self):
 
     query = f'''
     SELECT g.TICKER, g.DUALCLASS
@@ -116,11 +115,12 @@ class myData:
     
     return dataframe
 
-  def combine_data(self, dataframe):
+  def combine_data(self):
+    dualclass = self.dualclass()
     committees = self.count_committees()
     ceo = self.is_CEO_Dual()
     director_powerful = self.director_power()
-    total_dataset = pd.merge(pd.merge(pd.merge(director_powerful, committees, on='ticker', how='inner'), ceo, on='ticker', how='inner'), dataframe, on='ticker', how='inner')
+    total_dataset = pd.merge(pd.merge(pd.merge(director_powerful, committees, on='ticker', how='inner'), ceo, on='ticker', how='inner'), dualclass, on='ticker', how='inner')
     return total_dataset
 
 
@@ -133,8 +133,7 @@ def main():
   inst.SP500IDs = inst.get_SP500_IDs()
   inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear = inst.get_dates()
 
-  dataframe = inst.read_in_data_from_wrds()
-  final_dataset = inst.combine_data(dataframe)
+  final_dataset = inst.combine_data()
   #inst.output_excel_file(final_dataset, 'orgstaff1.xlsx')
 
   end = time.time()
@@ -145,7 +144,7 @@ def main():
 
 
 if __name__ == "__main__":
-  #print(main())
-  main()
+  print(main())
+  #main()
 
 
