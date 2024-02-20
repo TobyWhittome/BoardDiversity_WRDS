@@ -32,15 +32,24 @@ class myData:
   
   def get_SP500_permno(self):
     #Has duplicate IDs
-    id_ticker = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT ticker, boardid FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers}")))
+    id_ticker = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT ticker, MIN(boardid) AS boardid FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers} GROUP BY ticker")))
+    #print(id_ticker)
+    IDs = tuple(id_ticker['boardid'])
+    #print(len(IDs))
 
     #can't get this to work until SP500 IDs pulls in the right ones.  
-    id_permco = pd.DataFrame(data=(self.db.raw_sql(f"SELECT permco, companyid FROM wrdsapps.bdxcrspcomplink WHERE companyid IN {self.SP500IDs}")))
+    id_permco = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT permco, companyid FROM wrdsapps.bdxcrspcomplink WHERE companyid IN {IDs}")))
+    print(id_permco.drop_duplicates())
+    duplicated_rows = id_permco[id_permco.duplicated(subset=["companyid"], keep=False)]
+    sorted_duplicated_rows = duplicated_rows.sort_values(by='companyid', ascending=True)
+    print("duplicated rows")
+    self.output_excel_file(sorted_duplicated_rows, 'permcoduplication1.xlsx')
+    #print("id permco")
     
     
     id_permco.rename(columns={'companyid': 'boardid'}, inplace=True)
     complete_frame = (pd.merge(id_ticker, id_permco, on='boardid', how='inner'))
-    print(complete_frame)
+    #print(complete_frame)
     return complete_frame
     
   
@@ -95,22 +104,16 @@ class myData:
     #1. Count if any directors have above 4.5% share individually.
     #2. TotalOf (All Directors share %. = NUM_Shares / Outstanding)
     
-    #Outstanding shares
-    outstanding_shares = pd.DataFrame(data=(self.db.raw_sql(f"SELECT permno, shrout, shrstartdt FROM crsp_a_stock.stkshares WHERE shrenddt > '{self.year_ago_date}' AND permno IN {self.SP500IDs}")))
-    unique_permnos_df = outstanding_shares.drop_duplicates(subset=['permno']).reset_index(drop=True)
-
-    print(outstanding_shares)
-    print(unique_permnos_df)
+    #Outstanding shares Compustat
+    outstanding_shares = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TIC, CSHO, FYEAR FROM comp_na_daily_all.funda WHERE FYEAR BETWEEN '2022' AND '{self.thisyear}' AND TIC IN {self.SP500Tickers}")))
+    fixed_outstanding = outstanding_shares.dropna().drop_duplicates(subset=['tic'], keep='last').reset_index(drop=True)
     
-    
-
-    dataframe3 = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, SHROWN_TOT_PCT, SHROWN_EXCL_OPTS_PCT, EXEC_FULLNAME FROM comp_execucomp.anncomp WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
-    #print(dataframe3)
-    self.output_excel_file(dataframe3, 'sharestest.xlsx')
-
-
     #%Independent Directors & Shares held & Number of committees & Voting type
     dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, OWNLESS1, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
+    
+    #Directors indivdual shares
+    
+    
     
     result_df = dataframe.groupby('ticker').agg(
     high_voting_power=('pcnt_ctrl_votingpower', lambda x: (x >= 10).sum()),
@@ -166,7 +169,7 @@ def main():
 
 
 if __name__ == "__main__":
-  print(main())
-  #main()
+  #print(main())
+  main()
 
 
