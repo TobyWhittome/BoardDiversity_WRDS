@@ -112,23 +112,22 @@ class myData:
     shares_csho_merged['indiv_share_%'] = round((shares_csho_merged['num_of_shares'] / (shares_csho_merged['csho']*1000000)) * 100 , 3)
     
     #If the directors have above 4.5% then count 1 and return total
-    total_share = (shares_csho_merged[shares_csho_merged['indiv_share_%'] > 4.5]
-    .groupby('tic')['indiv_share_%'].count().reset_index(name='total_share_%'))
-    
-    print(total_share)
-
+    num_directors_45 = (shares_csho_merged.groupby('tic')['indiv_share_%']
+    .apply(lambda x: ((x > 4.5).sum() if (x > 4.5).any() else 0))
+    .reset_index(name='num_directors_>4.5'))
 
     result_df = dataframe.groupby('ticker').agg(
     high_voting_power=('pcnt_ctrl_votingpower', lambda x: (x >= 10).sum()),
     percentage_INEDs=('classification', lambda x: round((x.isin(['I-NED', 'I', 'NI-NED'])).mean() * 100, 1))
     ).reset_index()
-
-    result_df['indiv_share_%'] = shares_csho_merged['indiv_share_%']
+    
+    #Directors >4.5
+    result_df['num_directors_>4.5'] = num_directors_45['num_directors_>4.5']
     
     #Directors total share %
     total_share = shares_csho_merged.groupby('tic')['indiv_share_%'].sum().reset_index(name='total_share_%')
     final_df = pd.concat([result_df, total_share], axis=1)
-    final_df.drop(columns=['tic', 'indiv_share_%'], inplace=True)
+    final_df.drop(columns=['tic'], inplace=True)
     
     return final_df
 
@@ -169,7 +168,7 @@ def main():
   inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date = inst.get_dates()
 
   final_dataset = inst.combine_data()
-  #inst.output_excel_file(final_dataset, 'orgstaff1.xlsx')
+  inst.output_excel_file(final_dataset, 'final_dataset.xlsx')
 
   end = time.time()
   print("The time of execution of above program is :",
@@ -179,7 +178,7 @@ def main():
 
 
 if __name__ == "__main__":
-  #print(main())
-  main()
+  print(main())
+  #main()
 
 
