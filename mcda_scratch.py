@@ -35,9 +35,9 @@ def main():
     no_mcap_df = df.copy()
     no_mcap_df.drop(columns=['mktcapitalisation'], inplace=True)
     
-    weights = [0.5918, 0.2394, 0.1151, 0.0537, 0.2, 0.1, 0.123, 0.432]
+    #columns = [highvotingpower, INED %, 4.5Directors, directorTotalShare%, num_memberships, boardsize, CEO dual, dualclassvotes]
+    weights = [0.2, 0.7, 0.6, 0.8, 0.2, 0.3, 0.5, 0.432]
     normalized_df = inst.Normalize(no_mcap_df, len(no_mcap_df.columns), weights)
-
 
     # Calculating positive and negative values
     impact = ['-', '+', '+', '+', '+', '+', '-', '-']
@@ -63,14 +63,15 @@ def main():
         
     # Appending new columns in dataset   
 
-    df['distance positive'] = pp
-    df['distance negative'] = nn
+    #df['distance positive'] = pp
+    #df['distance negative'] = nn
     df['Topsis Score'] = score
 
     # calculating the rank according to topsis score
     df['Rank'] = (df['Topsis Score'].rank(method='max', ascending=False))
     dataset = df.astype({"Rank": int})
 
+    print(df)
     return df
         
 if __name__ == "__main__":
