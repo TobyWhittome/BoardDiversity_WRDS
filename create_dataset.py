@@ -39,17 +39,12 @@ class myData:
 
     #can't get this to work until SP500 IDs pulls in the right ones.  
     id_permco = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT permco, companyid FROM wrdsapps.bdxcrspcomplink WHERE companyid IN {IDs}")))
-    print(id_permco.drop_duplicates())
     duplicated_rows = id_permco[id_permco.duplicated(subset=["companyid"], keep=False)]
-    sorted_duplicated_rows = duplicated_rows.sort_values(by='companyid', ascending=True)
-    print("duplicated rows")
+    sorted_duplicated_rows = duplicated_rows.sort_values(by='companyid', ascending=True) 
     self.output_excel_file(sorted_duplicated_rows, 'permcoduplication1.xlsx')
-    #print("id permco")
-    
-    
+
     id_permco.rename(columns={'companyid': 'boardid'}, inplace=True)
     complete_frame = (pd.merge(id_ticker, id_permco, on='boardid', how='inner'))
-    #print(complete_frame)
     return complete_frame
     
   
@@ -105,22 +100,34 @@ class myData:
     #2. TotalOf (All Directors share %. = NUM_Shares / Outstanding)
     
     #Outstanding shares Compustat
-    outstanding_shares = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TIC, CSHO, FYEAR FROM comp_na_daily_all.funda WHERE FYEAR BETWEEN '2022' AND '{self.thisyear}' AND TIC IN {self.SP500Tickers}")))
+    outstanding_shares = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TIC, CSHO FROM comp_na_daily_all.funda WHERE FYEAR BETWEEN '2022' AND '{self.thisyear}' AND TIC IN {self.SP500Tickers}")))
     fixed_outstanding = outstanding_shares.dropna().drop_duplicates(subset=['tic'], keep='last').reset_index(drop=True)
     
     #%Independent Directors & Shares held & Number of committees & Voting type
-    dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, CLASSIFICATION, NUM_OF_SHARES, OWNLESS1, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
+    dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, CLASSIFICATION, PCNT_CTRL_VOTINGPOWER FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
     
-    #Directors indivdual shares
+    #Directors indivdual share %
+    num_shares_df = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, NUM_OF_SHARES FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
+    shares_csho_merged = pd.merge(fixed_outstanding, num_shares_df, how='inner', left_on='tic', right_on='ticker')
+    shares_csho_merged['indiv_share_%'] = round((shares_csho_merged['num_of_shares'] / (shares_csho_merged['csho']*1000000)) * 100 , 3)
     
-    
-    
+    #If the directors have above 4.5% then count 1 and return total
+    shares_csho_merged['numof_>4.5%_shareholders'] = shares_csho_merged['indiv_share_%'].count()
+
+
     result_df = dataframe.groupby('ticker').agg(
     high_voting_power=('pcnt_ctrl_votingpower', lambda x: (x >= 10).sum()),
     percentage_INEDs=('classification', lambda x: round((x.isin(['I-NED', 'I', 'NI-NED'])).mean() * 100, 1))
     ).reset_index()
 
-    return result_df
+    result_df['indiv_share_%'] = shares_csho_merged['indiv_share_%']
+    
+    #Directors total share %
+    total_share = shares_csho_merged.groupby('tic')['indiv_share_%'].sum().reset_index(name='total_share_%')
+    final_df = pd.concat([result_df, total_share], axis=1)
+    final_df.drop(columns=['tic', 'indiv_share_%'], inplace=True)
+    
+    return final_df
 
   
   def dualclass(self):
