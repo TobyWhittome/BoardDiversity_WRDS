@@ -8,7 +8,7 @@ from dateutil.relativedelta import relativedelta
 class myData:
 
   def __init__(self):
-    self.SP500Tickers, self.today_date, self.year_ago_date, self.month_ago_date, self.thisyear, self.lastyear, self.db, self.SP500IDs, self.SP500_permo = None, None, None, None, None, None, None, None, None
+    self.SP500Tickers, self.today_date, self.year_ago_date, self.month_ago_date, self.thisyear, self.lastyear, self.db, self.SP500IDs = None, None, None, None, None, None, None, None
 
   def get_dates(self):
     today = datetime.date.today()
@@ -25,27 +25,8 @@ class myData:
     return tuple(frame['Ticker'])
   
   def get_SP500_IDs(self):
-    # need to change
-    frame = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT boardid FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers}"))) # is the issue that some boardIds overlap?
-    print(len(frame))
-    return tuple(frame['boardid'])
-  
-  def get_SP500_permno(self):
-    #Has duplicate IDs
     id_ticker = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT ticker, MIN(boardid) AS boardid FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers} GROUP BY ticker")))
-    #print(id_ticker)
-    IDs = tuple(id_ticker['boardid'])
-    #print(len(IDs))
-
-    #can't get this to work until SP500 IDs pulls in the right ones.  
-    id_permco = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT permco, companyid FROM wrdsapps.bdxcrspcomplink WHERE companyid IN {IDs}")))
-    duplicated_rows = id_permco[id_permco.duplicated(subset=["companyid"], keep=False)]
-    sorted_duplicated_rows = duplicated_rows.sort_values(by='companyid', ascending=True) 
-    self.output_excel_file(sorted_duplicated_rows, 'permcoduplication1.xlsx')
-
-    id_permco.rename(columns={'companyid': 'boardid'}, inplace=True)
-    complete_frame = (pd.merge(id_ticker, id_permco, on='boardid', how='inner'))
-    return complete_frame
+    return tuple(id_ticker['boardid'])
     
   
   def output_excel_file(self, database, filename):
@@ -164,7 +145,6 @@ def main():
   inst.db = wrds.Connection(wrds_username="twhittome")
   inst.SP500Tickers = inst.get_SP500_companies()
   inst.SP500IDs = inst.get_SP500_IDs()
-  inst.SP500_permo = inst.get_SP500_permno()
   inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date = inst.get_dates()
 
   final_dataset = inst.combine_data()
@@ -172,7 +152,7 @@ def main():
 
   end = time.time()
   print("The time of execution of above program is :",
-        (end-start) * 10**3, "ms")
+        round((end-start),1), "s")
   
   return final_dataset
 
