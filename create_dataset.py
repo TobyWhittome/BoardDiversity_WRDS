@@ -112,7 +112,10 @@ class myData:
     shares_csho_merged['indiv_share_%'] = round((shares_csho_merged['num_of_shares'] / (shares_csho_merged['csho']*1000000)) * 100 , 3)
     
     #If the directors have above 4.5% then count 1 and return total
-    shares_csho_merged['numof_>4.5%_shareholders'] = shares_csho_merged['indiv_share_%'].count()
+    total_share = (shares_csho_merged[shares_csho_merged['indiv_share_%'] > 4.5]
+    .groupby('tic')['indiv_share_%'].count().reset_index(name='total_share_%'))
+    
+    print(total_share)
 
 
     result_df = dataframe.groupby('ticker').agg(
