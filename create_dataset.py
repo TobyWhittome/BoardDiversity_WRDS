@@ -73,12 +73,9 @@ class myData:
 
   #def gender_ratio(self):
     # OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
-
-
-  def director_power(self):
     
-    #1. Count if any directors have above 4.5% share individually.
-    #2. TotalOf (All Directors share %. = NUM_Shares / Outstanding)
+    
+  def director_power(self):
     
     #Outstanding shares Compustat
     outstanding_shares = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TIC, CSHO FROM comp_na_daily_all.funda WHERE FYEAR BETWEEN '2022' AND '{self.thisyear}' AND TIC IN {self.SP500Tickers}")))
@@ -111,6 +108,13 @@ class myData:
     final_df.drop(columns=['tic'], inplace=True)
     
     return final_df
+  
+  
+  def market_cap(self):
+    #In millions
+    mcap = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT ticker, MAX(mktcapitalisation) as mktcapitalisation FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers} GROUP BY ticker")))
+    mcap = mcap.dropna().reset_index(drop=True)
+    return mcap
 
   
   def dualclass(self):
@@ -134,7 +138,8 @@ class myData:
     committees = self.count_committees()
     ceo = self.is_CEO_Dual()
     director_powerful = self.director_power()
-    total_dataset = pd.merge(pd.merge(pd.merge(director_powerful, committees, on='ticker', how='inner'), ceo, on='ticker', how='inner'), dualclass, on='ticker', how='inner')
+    mcap = self.market_cap()
+    total_dataset = pd.merge(pd.merge(pd.merge(pd.merge(director_powerful, committees, on='ticker', how='inner'), ceo, on='ticker', how='inner'), dualclass, on='ticker', how='inner'), mcap, on='ticker', how='inner')
     return total_dataset
 
 

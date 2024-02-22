@@ -3,7 +3,6 @@ from scikitmcda.constants import MAX, MIN, LinearMinMax_, LinearMax_, LinearSum_
 import create_dataset
 
 
-
 topsis = TOPSIS()
 
 df = create_dataset.main()
@@ -12,9 +11,9 @@ del df[df.columns[0]]
 topsis.dataframe(df.values, indexes, df.columns)
 print(topsis.pretty_original())
 
-
-topsis.set_weights_manually([0.5918, 0.2394, 0.1151, 0.0537, 0.2, 0.1])
-# topsis.set_weights_by_entropy()
+topsis.set_signals([MIN, MAX, MAX, MAX, MAX, MAX, MIN, MIN])
+#topsis.set_weights_manually([0.5918, 0.2394, 0.1151, 0.0537, 0.2, 0.1, 0.3, 0.2])
+topsis.set_weights_by_entropy()
 # topsis.set_weights_by_ranking_B_POW(0)
 
                                    # C1   C2     C3   C4 
@@ -24,7 +23,7 @@ topsis.set_weights_manually([0.5918, 0.2394, 0.1151, 0.0537, 0.2, 0.1])
                                    [1/7,  1/5,  1/3,   1]])  # C4
 print("AHP Returned:\n", w_AHP) """
 
-topsis.set_signals([MIN, MAX, MAX, MAX, MIN, MIN])
+
 
 topsis.decide()
 
