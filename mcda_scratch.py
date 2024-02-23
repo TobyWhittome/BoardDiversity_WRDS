@@ -3,7 +3,7 @@ import create_dataset
 class mcda:
     
     def __init__(self):
-        pass
+        self.weights = []
       
     def Normalize(self, dataset, nCol, weights):
         for i in range(1, nCol):
@@ -27,8 +27,12 @@ class mcda:
                 p_sln[i-1], n_sln[i-1] = n_sln[i-1], p_sln[i-1]
         return p_sln, n_sln
     
+    def get_weights(self):
+        weights = [0.05, 0.22, 0.17, 0.18, 0.05, 0.07, 0.16, 0.10]
+        return weights
+
     
-def main():
+def main(weights):
     
     inst = mcda()
     df = create_dataset.main()
@@ -36,8 +40,12 @@ def main():
     no_mcap_df.drop(columns=['mktcapitalisation'], inplace=True)
     
     #columns = [highvotingpower, INED %, 4.5Directors, directorTotalShare%, num_memberships, boardsize, CEO dual, dualclassvotes]
-    weights = [0.2, 0.7, 0.6, 0.8, 0.2, 0.3, 0.5, 0.432]
-    normalized_df = inst.Normalize(no_mcap_df, len(no_mcap_df.columns), weights)
+    if len(weights) != 0:
+        inst.weights = weights
+    else:
+        inst.weights = inst.get_weights()
+        
+    normalized_df = inst.Normalize(no_mcap_df, len(no_mcap_df.columns), inst.weights)
 
     # Calculating positive and negative values
     impact = ['-', '+', '+', '+', '+', '+', '-', '-']
@@ -71,8 +79,8 @@ def main():
     df['Rank'] = (df['Topsis Score'].rank(method='max', ascending=False))
     dataset = df.astype({"Rank": int})
 
-    print(df)
     return df
         
 if __name__ == "__main__":
-  main()
+
+  main([])
