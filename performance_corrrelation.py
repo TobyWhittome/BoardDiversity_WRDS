@@ -3,7 +3,7 @@ from scipy.stats import pearsonr
 import mcda_scratch
 
 # Load the Topsis scores from mcda_scratch.py
-df = mcda_scratch.main()
+df = mcda_scratch.main([])
 
 # Calculate the correlation between Topsis score and market cap
 correlation, _ = pearsonr(df['Topsis Score'], df['mktcapitalisation'])

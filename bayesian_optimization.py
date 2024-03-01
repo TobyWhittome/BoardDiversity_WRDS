@@ -1,6 +1,7 @@
-from skopt import gp_minimize
+#from skopt import gp_minimize
 from skopt.space import Real
 from scipy.stats import pearsonr
+from scipy.optimize import minimize
 import numpy as np
 import mcda_scratch
 
@@ -15,13 +16,24 @@ def objective_function(weights):
     # Perform Topsis analysis and calculate Topsis Score
     correlation, _ = pearsonr(df['Topsis Score'], df['mktcapitalisation'])
     # Return negative correlation (to maximize)
-    return -correlation
+    #return -correlation
+    return -1
 
 # Define the search space
 space = [Real(0.0, 1.0, name='w{}'.format(i)) for i in range(len(weights))]
+#num_variables = governance_scores.shape[1]  # Number of governance variables
+initial_guess = [1 / num_variables] * num_variables
 
 # Run Bayesian optimization
-result = gp_minimize(objective_function, space, n_calls=50, random_state=42)
+#result = gp_minimize(objective_function, space, n_calls=50, random_state=42)
+result = minimize(
+    objective_function, 
+    initial_guess, 
+    args=(governance_scores, market_caps),
+    method='SLSQP', 
+    bounds=bounds, 
+    constraints=constraints
+)
 
 # Get the optimal weights
 optimal_weights = result.x

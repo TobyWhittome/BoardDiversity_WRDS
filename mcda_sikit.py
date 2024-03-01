@@ -8,12 +8,14 @@ topsis = TOPSIS()
 df = create_dataset.main()
 indexes = df[df.columns[0]]
 del df[df.columns[0]]
-topsis.dataframe(df.values, indexes, df.columns)
-print(topsis.pretty_original())
+no_mcap_df = df.copy()
+no_mcap_df.drop(columns=['mktcapitalisation'], inplace=True)
+topsis.dataframe(no_mcap_df.values, indexes, no_mcap_df.columns)
+#print(topsis.pretty_original())
 
 topsis.set_signals([MIN, MAX, MAX, MAX, MAX, MAX, MIN, MIN])
-#topsis.set_weights_manually([0.5918, 0.2394, 0.1151, 0.0537, 0.2, 0.1, 0.3, 0.2])
-topsis.set_weights_by_entropy()
+topsis.set_weights_manually([0.5918, 0.2394, 0.1151, 0.0537, 0.2, 0.1, 0.3, 0.2])
+#topsis.set_weights_by_entropy()
 # topsis.set_weights_by_ranking_B_POW(0)
 
                                    # C1   C2     C3   C4 
@@ -29,11 +31,11 @@ topsis.decide()
 
 print("WEIGHTS:\n", topsis.weights)
 
-print("NORMALIZED:\n", topsis.pretty_normalized())
+#print("NORMALIZED:\n", topsis.pretty_normalized())
 
-print("WEIGHTED:\n", topsis.pretty_weighted())
+#print("WEIGHTED:\n", topsis.pretty_weighted())
 
-print("RANKING TOPSIS with", topsis.normalization_method , ":\n", topsis.pretty_decision())
+#print("RANKING TOPSIS with", topsis.normalization_method , ":\n", topsis.pretty_decision())
 
 topsis.decide(EnhancedAccuracy_)
-print("RANKING TOPSIS with", topsis.normalization_method, ":\n", topsis.pretty_decision())
+#print("RANKING TOPSIS with", topsis.normalization_method, ":\n", topsis.pretty_decision())

@@ -28,7 +28,8 @@ class mcda:
         return p_sln, n_sln
     
     def get_weights(self):
-        weights = [0.05, 0.22, 0.17, 0.18, 0.05, 0.07, 0.16, 0.10]
+        #weights = [0.05, 0.22, 0.17, 0.18, 0.05, 0.07, 0.16, 0.10]
+        weights = [0.2740107476113237, 6.437404949557777e-05, 0.10460841357171742, 0.0724586189525137, 0.0001823365247053887, 0.0006540140675967686, 0.2740107476113237, 0.2740107476113237] # entropy weights give a -0.135 correlation
         return weights
 
     
@@ -48,7 +49,7 @@ def main(weights):
     normalized_df = inst.Normalize(no_mcap_df, len(no_mcap_df.columns), inst.weights)
 
     # Calculating positive and negative values
-    impact = ['-', '+', '+', '+', '+', '+', '-', '-']
+    impact = ['-', '+', '+', '+', '+', '-', '-', '-']
 
     p_sln, n_sln = inst.Calc_Values(normalized_df, len(normalized_df.columns), impact)
 
