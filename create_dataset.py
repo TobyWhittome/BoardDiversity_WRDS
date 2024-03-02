@@ -74,7 +74,22 @@ class myData:
   #def gender_ratio(self):
     # OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
     
-    
+
+  def tobinsQ(self):
+    data = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TIC, MKVALT, AT FROM comp_na_daily_all.funda WHERE FYEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TIC IN {self.SP500Tickers}")))
+    fixed_outstanding = data.dropna().drop_duplicates(subset=['tic'], keep='last').reset_index(drop=True)
+    fixed_outstanding.rename(columns={'tic': 'ticker'}, inplace=True)
+
+    fixed_outstanding['tobinsQ'] = fixed_outstanding['mkvalt'] / fixed_outstanding['at']
+
+    #gives 2.08 average which should be 1.4 according to today's stats.
+    print(fixed_outstanding['tobinsQ'].mean())
+
+    #returning only ticker and tobinsQ
+    return fixed_outstanding[['ticker', 'tobinsQ']]
+  
+
+
   def director_power(self):
     
     #Outstanding shares Compustat
@@ -139,7 +154,8 @@ class myData:
     ceo = self.is_CEO_Dual()
     director_powerful = self.director_power()
     mcap = self.market_cap()
-    total_dataset = pd.merge(pd.merge(pd.merge(pd.merge(director_powerful, committees, on='ticker', how='inner'), ceo, on='ticker', how='inner'), dualclass, on='ticker', how='inner'), mcap, on='ticker', how='inner')
+    tobinsQ = self.tobinsQ()
+    total_dataset = pd.merge(pd.merge(pd.merge(pd.merge(pd.merge(director_powerful, committees, on='ticker', how='inner'), tobinsQ, on='ticker', how='inner'), ceo, on='ticker', how='inner'), dualclass, on='ticker', how='inner'), mcap, on='ticker', how='inner')
     return total_dataset
 
 
