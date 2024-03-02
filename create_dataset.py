@@ -76,25 +76,18 @@ class myData:
     
 
   def tobinsQ(self):
-    data = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TIC, MKVALT, ACT FROM comp_na_daily_all.funda WHERE FYEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TIC IN {self.SP500Tickers}")))
+    data = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TIC, MKVALT, AT FROM comp_na_daily_all.funda WHERE FYEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TIC IN {self.SP500Tickers}")))
     fixed_outstanding = data.dropna().drop_duplicates(subset=['tic'], keep='last').reset_index(drop=True)
-  
-
-    #Calculate mkvalt / ACT for every ticker
-    mcap = self.market_cap()
-    #rename TIC columns to ticker
     fixed_outstanding.rename(columns={'tic': 'ticker'}, inplace=True)
-    #create new dataframe with mcap and mkvalt
-    mcap_total = mcap.merge(fixed_outstanding, on='ticker', how='inner')
 
+    fixed_outstanding['tobinsQ'] = fixed_outstanding['mkvalt'] / fixed_outstanding['at']
 
-    #The prolem is the ACT is not giving correct data.
-    fixed_outstanding['tobinsQ'] = mcap_total['mktcapitalisation'] / mcap_total['act']
-
-    #gives 8.9 average which should be 1.4 according to today's stats.
+    #gives 2.08 average which should be 1.4 according to today's stats.
     print(fixed_outstanding['tobinsQ'].mean())
-   
-    
+
+    #returning only ticker and tobinsQ
+    return fixed_outstanding[['ticker', 'tobinsQ']]
+  
 
 
   def director_power(self):
