@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import pearsonr
 from scipy.optimize import minimize
-import mcda_scratch
+import MCDA.mcda_scratch as mcda_scratch
 
 df = mcda_scratch.main([])
 

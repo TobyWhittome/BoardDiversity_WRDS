@@ -3,7 +3,7 @@ from skopt.space import Real
 from scipy.stats import pearsonr
 from scipy.optimize import minimize
 import numpy as np
-import mcda_scratch
+import MCDA.mcda_scratch as mcda_scratch
 
 
 # Load the Topsis scores from mcda_scratch.py

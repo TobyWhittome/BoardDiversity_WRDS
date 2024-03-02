@@ -1,6 +1,6 @@
 import pandas as pd
 from scipy.stats import pearsonr
-import mcda_scratch
+import MCDA.mcda_scratch as mcda_scratch
 
 # Load the Topsis scores from mcda_scratch.py
 df = mcda_scratch.main([])
