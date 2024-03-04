@@ -6,7 +6,8 @@ import numpy as np
 
 df = pd.read_excel('final_dataset.xlsx')
 
-x = df['total_share_%']
+x = df['total_memberships']
+#y = df['mktcapitalisation']
 y = df['tobinsQ']
 
 #Regression y on x, to predict mcap based off percentage INEDs
@@ -23,6 +24,9 @@ plt.scatter(x, y)
 plt.plot(x, mymodel)
 print(x.min(), x.max())
 print(y.min(), y.max())
+
+r_squared = r**2
+print(f'R-squared value: {r_squared}')
 
 
 #plt.xlim(0, 3)

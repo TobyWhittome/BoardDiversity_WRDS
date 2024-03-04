@@ -1,4 +1,6 @@
-import create_dataset
+import pandas as pd
+from scipy.stats import pearsonr
+import matplotlib.pyplot as plt
 
 class mcda:
     
@@ -36,9 +38,9 @@ class mcda:
 def main(weights):
     
     inst = mcda()
-    df = create_dataset.main()
+    df = pd.read_excel('final_dataset.xlsx')
     no_mcap_df = df.copy()
-    no_mcap_df.drop(columns=['mktcapitalisation'], inplace=True)
+    no_mcap_df.drop(columns=['mktcapitalisation', 'tobinsQ'], inplace=True)
     
     #columns = [highvotingpower, INED %, 4.5Directors, directorTotalShare%, num_memberships, boardsize, CEO dual, dualclassvotes]
     if len(weights) != 0:
@@ -80,6 +82,17 @@ def main(weights):
     df['Rank'] = (df['Topsis Score'].rank(method='max', ascending=False))
     dataset = df.astype({"Rank": int})
 
+    print(df)
+    plt.figure(figsize=(10, 6)) # Optional: Adjusts the figure size
+    plt.scatter(df['Topsis Score'], df['tobinsQ'], color='b') # You can customize the plot with markers, linestyles, and colors
+    plt.title('Plot of A vs B') # Optional: Adds a title to the plot
+    plt.xlabel('Topsis Score') # Label for the X-axis
+    plt.ylabel('TobinsQ') # Label for the Y-axis
+    plt.grid(True) # Optional: Adds a grid for easier visualization
+    plt.show()
+    correlation, _ = pearsonr(df['Topsis Score'], df['tobinsQ'])
+    print(f"Correlation between Topsis score and Tobin's Q: {correlation}")
+    
     return df
         
 if __name__ == "__main__":

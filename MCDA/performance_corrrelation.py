@@ -6,6 +6,6 @@ import MCDA.mcda_scratch as mcda_scratch
 df = mcda_scratch.main([])
 
 # Calculate the correlation between Topsis score and market cap
-correlation, _ = pearsonr(df['Topsis Score'], df['mktcapitalisation'])
+correlation, _ = pearsonr(df['Topsis Score'], df['tobinsQ'])
 
-print(f"Correlation between Topsis score and market cap: {correlation}")
+print(f"Correlation between Topsis score and Tobin's Q: {correlation}")
