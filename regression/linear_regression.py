@@ -6,7 +6,7 @@ import numpy as np
 
 df = pd.read_excel('final_dataset.xlsx')
 
-x = df['total_memberships']
+x = df['CEODuality']
 #y = df['mktcapitalisation']
 y = df['tobinsQ']
 
@@ -27,6 +27,8 @@ print(y.min(), y.max())
 
 r_squared = r**2
 print(f'R-squared value: {r_squared}')
+
+print(f"the gradient is {slope}")
 
 
 #plt.xlim(0, 3)
