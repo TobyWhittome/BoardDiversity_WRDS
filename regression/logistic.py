@@ -4,18 +4,31 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 import matplotlib.pyplot as plt
 import seaborn as sns
+import scipy.stats as stats
 
 # Load data
 df = pd.read_excel('final_dataset.xlsx')
 
-# Assuming 'Y' is the binary target variable and the rest are features
-columns_to_drop = ['mktcapitalisation', 'ticker', 'tobinsQ']
-y = df['tobinsQ']  # Target variable
-X = df.drop(columns_to_drop, axis=1)  # Features
+X = df[['CEODuality']]
+y = df[['tobinsQ']]
+
+# Perform a t-test
+t_test_result = stats.ttest_ind(df[df['CEODuality'] == 0]['tobinsQ'],
+                                df[df['CEODuality'] == 1]['tobinsQ'])
+
+# Calculate point-biserial correlation coefficient
+correlation = stats.pointbiserialr(df['CEODuality'], df['tobinsQ'])
+
+print("T-test result:", t_test_result)
+print("Point-Biserial Correlation:", correlation)
 
 
-# Split the data into training and testing sets
+
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+print(X_train)
+print(X_test)
+print(y_train)
+print(y_test)
 
 # Initialize and fit the logistic regression model
 model = LogisticRegression()

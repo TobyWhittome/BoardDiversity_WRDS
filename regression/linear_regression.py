@@ -6,7 +6,6 @@ import numpy as np
 
 df = pd.read_excel('final_dataset.xlsx')
 
-
 #y = df['mktcapitalisation']
 y = df['tobinsQ']
 x = df['boardsize_mean'] = df['boardsize'].sub(df['boardsize'].mean()).abs()
@@ -30,6 +29,8 @@ print(y.min(), y.max())
 
 r_squared = r**2
 print(f'R-squared value: {r_squared}')
+
+print(f"the gradient is {slope}")
 
 
 #plt.xlim(0, 3)
