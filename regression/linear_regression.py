@@ -6,9 +6,12 @@ import numpy as np
 
 df = pd.read_excel('final_dataset.xlsx')
 
-x = df['total_memberships']
+
 #y = df['mktcapitalisation']
 y = df['tobinsQ']
+x = df['boardsize_mean'] = df['boardsize'].sub(df['boardsize'].mean()).abs()
+#df = df[df['boardsize_mean'] <= 5]
+#x = df['boardsize_mean']
 
 #Regression y on x, to predict mcap based off percentage INEDs
 slope, intercept, r, p, std_err = stats.linregress(x, y)

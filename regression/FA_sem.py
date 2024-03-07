@@ -1,5 +1,5 @@
 import semopy as sem
-import create_dataset
+import dataset.create_dataset as create_dataset
 
 
 data = create_dataset.main()

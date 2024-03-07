@@ -1,5 +1,5 @@
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-import create_dataset
+import dataset.create_dataset as create_dataset
 import pandas as pd
 import matplotlib as plt
 import numpy as np

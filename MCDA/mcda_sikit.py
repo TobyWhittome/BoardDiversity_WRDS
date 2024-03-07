@@ -1,6 +1,6 @@
 from scikitmcda.topsis import TOPSIS
 from scikitmcda.constants import MAX, MIN, LinearMinMax_, LinearMax_, LinearSum_, Vector_, EnhancedAccuracy_, Logarithmic_ 
-import create_dataset
+import dataset.create_dataset as create_dataset
 
 
 topsis = TOPSIS()

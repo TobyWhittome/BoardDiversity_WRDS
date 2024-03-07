@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from scipy.stats import pearsonr
 
+#This adjust the weight for boardsize -- but I don't need it anymore
+
 class mcda:
     
     def __init__(self, predefined_weights):
