@@ -2,37 +2,50 @@ import matplotlib.pyplot as plt
 from scipy import stats
 import pandas as pd
 import numpy as np
+from scipy.stats import pearsonr
 
 
-df = pd.read_excel('final_dataset.xlsx')
-
-#y = df['mktcapitalisation']
+df = pd.read_excel('dataset/transformed_dataset.xlsx')
 y = df['tobinsQ']
-x = df['boardsize_mean'] = df['boardsize'].sub(df['boardsize'].mean()).abs()
-#df = df[df['boardsize_mean'] <= 5]
-#x = df['boardsize_mean']
+df.drop(columns=['ticker'], inplace=True)
+df.drop(columns=['mktcapitalisation'], inplace=True)
+df.drop(columns=['tobinsQ'], inplace=True)
 
-#Regression y on x, to predict mcap based off percentage INEDs
-slope, intercept, r, p, std_err = stats.linregress(x, y)
+
+for col in df.columns:
+
+  x = df[col]
+  print(f"Variable in question: {x.name}")
+
+  slope, intercept, r, p, std_err = stats.linregress(x, y)
+  print(f"Gradient: {slope}")
+
+  correlation, _ = pearsonr(x, y)
+  print(f"Correlation between Topsis score and Tobin's Q: {correlation}")
+
+  correlationspear, _ = stats.spearmanr(x, y)
+  print(f"Spearman's rank correlation: {correlationspear} \n")
+
+  #check for a basic correlation
+  
+      
+
 
 def myfunc(x):
   return slope * x + intercept
 
-mymodel = list(map(myfunc, x))
+def visualize():
+  mymodel = list(map(myfunc, x))
 
-x = np.array(x)
+  x = np.array(x)
 
-plt.scatter(x, y)
-plt.plot(x, mymodel)
-print(x.min(), x.max())
-print(y.min(), y.max())
+  plt.scatter(x, y)
+  plt.plot(x, mymodel)
+  print(x.min(), x.max())
+  print(y.min(), y.max())
 
-r_squared = r**2
-print(f'R-squared value: {r_squared}')
+  r_squared = r**2
+  print(f'R-squared value: {r_squared}')
 
-print(f"the gradient is {slope}")
-
-
-#plt.xlim(0, 3)
-#plt.ylim(0, 250000)
-plt.show()
+  print(f"the gradient is {slope}")
+  plt.show()
