@@ -1,5 +1,7 @@
 from keras.models import Sequential
 from keras.layers import Dense
+from sklearn.model_selection import train_test_split
+import pandas as pd
 
 # Going to need a way to optimise these weights.
 #Options:
@@ -36,6 +38,15 @@ model.compile(optimizer='adam', loss='mean_squared_error')
 # batch size = how many samples we train in tandem
 # epochs = how many times we go through the entire dataset.
 # validation is important for testing
+
+# Load data
+df = pd.read_excel('dataset/final_dataset.xlsx')
+
+X = df[['CEODuality']]
+y = df[['tobinsQ']]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
 model.fit(X_train, y_train, epochs=100, batch_size=32, validation_data=(X_test, y_test))
 #
 

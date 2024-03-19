@@ -1,40 +1,43 @@
-#Factor analysis method:
-
 import pandas as pd
 from factor_analyzer import FactorAnalyzer
 import matplotlib.pyplot as plt
-import dataset.create_dataset as create_dataset
+from factor_analyzer.factor_analyzer import calculate_kmo
+from factor_analyzer.factor_analyzer import calculate_bartlett_sphericity
 
-# Load your dataset
-df = create_dataset.main()
+df = pd.read_excel('dataset/final_dataset.xlsx')
+df.drop(columns=['ticker'], inplace=True)
+df.drop(columns=['mktcapitalisation'], inplace=True)
+df.drop(columns=['tobinsQ'], inplace=True)
 print(df)
-df = df.iloc[1:15]
-X = df[['total_memberships', 'CEODuality','percentage_NEDs']]
+
+kmo_all,kmo_model=calculate_kmo(df)
+print(kmo_model)
+
+chi_square_value,p_value=calculate_bartlett_sphericity(df)
+print(chi_square_value, p_value)
+
+""" # Test for the number of factors we must reduce to.
+# We get 3 values greater than 1. So we will use n_factors=3 in our next FA.
+fa = FactorAnalyzer()
+fa.set_params(n_factors=8, rotation=None)
+fa.fit(df)
+ev, v = fa.get_eigenvalues()
+print(ev) """
 
 
-# Drop any rows with missing values
-#data = df.dropna()
+#df = df.iloc[1:15]
+#X = df[['total_memberships', 'CEODuality','percentage_NEDs']]
 
-# Extract the features (variables) you want to include in the factor analysis
-# Assume 'features' is a list of column names in your dataset
-#features = ['var1', 'var2', 'var3', '...']
-
-# Subset the dataset with selected features
-#subset_data = data[features]
-
-# Initialize the factor analyzer with the desired number of factors
-# You can adjust the number of factors based on your analysis
 fa = FactorAnalyzer(n_factors=3, rotation=None) 
+fa.fit(df)
 
-# Fit the model to the data
-fa.fit(X)
-
-# Get the factor loadings
 loadings = fa.loadings_
-
-# Print the factor loadings
 print("Factor Loadings:")
 print(loadings)
+
+# Get variance of each factors
+print(fa.get_factor_variance())
+
 
 # Plot the scree plot to determine the number of factors
 ev, v = fa.get_eigenvalues()

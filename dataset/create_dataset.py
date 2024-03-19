@@ -8,15 +8,25 @@ from dateutil.relativedelta import relativedelta
 class myData:
 
   def __init__(self):
-    self.SP500Tickers, self.today_date, self.year_ago_date, self.month_ago_date, self.thisyear, self.lastyear, self.db, self.SP500IDs = None, None, None, None, None, None, None, None
+    self.SP500Tickers, self.today_date, self.year_ago_date, self.month_ago_date, self.thisyear, self.lastyear, self.twoyearago, self.db, self.SP500IDs = None, None, None, None, None, None, None, None, None
 
   def get_dates(self):
     today = datetime.date.today()
     one_month_ago = today - relativedelta(months=1)
     thisYear = int(today.strftime("%Y"))
-    yearMod = thisYear - 1
-    modified_date = today.replace(year=yearMod)
-    return today, modified_date, thisYear, yearMod, one_month_ago
+    lastyear = thisYear - 1
+    modified_date = today.replace(year=lastyear)
+    twoago = lastyear - 1
+    return today, modified_date, thisYear, lastyear, one_month_ago, twoago
+  
+  def set_dates(self, year):
+    thisYear = year
+    lastyear = thisYear - 1
+    today_date = datetime.date.today().replace(year=thisYear)
+    year_ago_date = today_date.replace(year=lastyear)
+    one_month_ago = today_date - relativedelta(months=1)
+    twoago = lastyear - 1
+    return today_date, year_ago_date, thisYear, lastyear, one_month_ago, twoago
 
 
   def get_SP500_companies(self) -> pd.DataFrame:
@@ -93,7 +103,7 @@ class myData:
   def director_power(self):
     
     #Outstanding shares Compustat
-    outstanding_shares = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TIC, CSHO FROM comp_na_daily_all.funda WHERE FYEAR BETWEEN '2022' AND '{self.thisyear}' AND TIC IN {self.SP500Tickers}")))
+    outstanding_shares = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TIC, CSHO FROM comp_na_daily_all.funda WHERE FYEAR BETWEEN '{self.twoyearago}' AND '{self.thisyear}' AND TIC IN {self.SP500Tickers}")))
     fixed_outstanding = outstanding_shares.dropna().drop_duplicates(subset=['tic'], keep='last').reset_index(drop=True)
     
     #%Independent Directors & Shares held & Number of committees & Voting type
@@ -156,20 +166,23 @@ class myData:
     mcap = self.market_cap()
     tobinsQ = self.tobinsQ()
     total_dataset = pd.merge(pd.merge(pd.merge(pd.merge(pd.merge(director_powerful, committees, on='ticker', how='inner'), tobinsQ, on='ticker', how='inner'), ceo, on='ticker', how='inner'), dualclass, on='ticker', how='inner'), mcap, on='ticker', how='inner')
-    return total_dataset
+    #drop duplicates
+    final = total_dataset.drop_duplicates().reset_index(drop=True)
+    return final
 
 
 
-def main():
+def main(year):
   start = time.time()
   inst = myData()
   inst.db = wrds.Connection(wrds_username="twhittome")
   inst.SP500Tickers = inst.get_SP500_companies()
   inst.SP500IDs = inst.get_SP500_IDs()
-  inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date = inst.get_dates()
+  #inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date = inst.get_dates(year)
+  inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date, inst.twoyearago = inst.set_dates(year)
 
   final_dataset = inst.combine_data()
-  inst.output_excel_file(final_dataset, 'final_dataset.xlsx')
+  #inst.output_excel_file(final_dataset, 'final_dataset.xlsx')
 
   end = time.time()
   print("The time of execution of above program is :",

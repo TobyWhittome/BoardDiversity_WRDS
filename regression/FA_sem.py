@@ -1,8 +1,7 @@
 import semopy as sem
-import dataset.create_dataset as create_dataset
+import pandas as pd
 
-
-data = create_dataset.main()
+data = pd.read_excel('dataset/final_dataset.xlsx')
 data.drop(columns=['ticker'], inplace=True)
 data = data.rename(columns={'high_voting_power': 'y1', 'percentage_INEDs': 'y2', 'num_directors_>4.5': 'y3', 'total_share_%': 'y4', 'total_memberships':'y5', 'boardsize':'y6', 'CEODuality': 'x1', 'dualclass': 'x2', 'mktcapitalisation': 'x3'})
 
