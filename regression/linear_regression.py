@@ -4,6 +4,9 @@ import pandas as pd
 import numpy as np
 from scipy.stats import pearsonr
 
+def myfunc(x):
+  return slope * x + intercept
+
 
 df = pd.read_excel('dataset/transformed_dataset.xlsx')
 y = df['tobinsQ']
@@ -11,11 +14,13 @@ df.drop(columns=['ticker'], inplace=True)
 df.drop(columns=['mktcapitalisation'], inplace=True)
 df.drop(columns=['tobinsQ'], inplace=True)
 
+spearmans = []
 
 for col in df.columns:
 
   x = df[col]
-  print(f"Variable in question: {x.name}")
+  variable = x.name
+  print(f"Variable in question: {variable}")
 
   slope, intercept, r, p, std_err = stats.linregress(x, y)
   print(f"Gradient: {slope}")
@@ -25,27 +30,29 @@ for col in df.columns:
 
   correlationspear, _ = stats.spearmanr(x, y)
   print(f"Spearman's rank correlation: {correlationspear} \n")
+  spearmans.append(correlationspear)
 
-  #check for a basic correlation
-  
-      
-
-
-def myfunc(x):
-  return slope * x + intercept
-
-def visualize():
+""" 
   mymodel = list(map(myfunc, x))
 
   x = np.array(x)
 
   plt.scatter(x, y)
   plt.plot(x, mymodel)
-  print(x.min(), x.max())
-  print(y.min(), y.max())
+  plt.title(variable)
+  
+  #print(x.min(), x.max())
+  #print(y.min(), y.max())
 
   r_squared = r**2
-  print(f'R-squared value: {r_squared}')
+  #print(f'R-squared value: {r_squared}')
 
   print(f"the gradient is {slope}")
-  plt.show()
+  plt.show() """
+  
+  
+#Normalise all values in the spearmans array
+positive_array = np.abs(spearmans)
+weights_array = positive_array / positive_array.sum()
+#normalized_array = (positive_array - positive_array.min()) / (positive_array.max() - positive_array.min())
+print(weights_array)

@@ -81,8 +81,9 @@ class myData:
     new_com_data.reset_index(drop=True)
     return new_com_data
 
-  #def gender_ratio(self):
-    # OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
+  def gender_ratio(self):
+    OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
+    return OrgSummary
     
 
   def tobinsQ(self):
@@ -165,6 +166,8 @@ class myData:
     director_powerful = self.director_power()
     mcap = self.market_cap()
     tobinsQ = self.tobinsQ()
+    genderRatio = self.gender_ratio()
+    #pd.merge(genderRatio, committees, on='ticker', how='inner')
     total_dataset = pd.merge(pd.merge(pd.merge(pd.merge(pd.merge(director_powerful, committees, on='ticker', how='inner'), tobinsQ, on='ticker', how='inner'), ceo, on='ticker', how='inner'), dualclass, on='ticker', how='inner'), mcap, on='ticker', how='inner')
     #drop duplicates
     final = total_dataset.drop_duplicates().reset_index(drop=True)
@@ -192,7 +195,8 @@ def main(year):
 
 
 if __name__ == "__main__":
-  print(main())
+  year = 2024
+  print(main(year))
   #main()
 
 

@@ -1,6 +1,7 @@
 import pandas as pd
 from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
+from scipy import stats
 
 class mcda:
     
@@ -31,15 +32,41 @@ class mcda:
     
     def get_weights(self):
         #Weights OG
-        weights = [0.05, 0.22, 0.17, 0.18, 0.05, 0.07, 0.16, 0.10]
+        #High voting power, INEDS, Num directors, total_share, num_commttiees, CEOdual, dualclass, boardsize
+        #weights = [0.05, 0.22, 0.17, 0.18, 0.05, 0.07, 0.16, 0.10]
         
-        #Pearson optimize weights with Tobin'Q
+        #Normalised indiv spearman's coeff scores
+        #weights = [0.00335242, 0.34013028, 0.11792744, 0.19255043, 0.10105673, 0.12141488, 0.02420027, 0.09936755]
+        
+        #Trial and error ---- 1.833
+        weights = [0.303, 0.04, 0.117, 0.192, 0.101, 0.121, 0.024, 0.099]
+        
+        
+        #Trial and error ---- 1.833
+        weights = [0.303, 0.04, 0.117, 0.192, 0.101, 0.121, 0.024, 0.099]
+        
+        #Trial and error ---- 1.888
+        weights = [0.303, 0.04, 0.117, 0.092, 0.101, 0.121, 0.024, 0.099]
+        
+        
+        #Trial and error ---- 1919
+        weights = [0.303, 0.04, 0.277, 0.032, 0.101, 0.121, 0.024, 0.099]
+        
+        
+        #Trial and error ---- 
+        weights = [0.303, 0.04, 0.277, 0.032, 0.101, 0.121, 0.024, 0.099]
+        
+        
+        #Trial and error ---- 1.833
+        #weights = [0.303, 0.04, 0.117, 0.192, 0.101, 0.121, 0.024, 0.099]
+        
+        #Pearson optimize weights with Tobin'Q -- 0.12 val
         #weights = [0.00000000e+00, 1.03180555e-16, 8.67909704e-01, 1.32090296e-01, 2.85622294e-18, 1.48625612e-18, 1.66028900e-16, 0.00000000e+00]
         
-        # PearsonOp with OG as initial guess
+        # PearsonOp with OG as initial guess -- 0.125 val
         #weights = [3.67845656e-17, 9.07604978e-17, 8.64099889e-01, 1.35900111e-01, 0, 0, 3.55785703e-17, 2.56436079e-17]
         
-        # Entropy weights?
+        # Entropy weights? -0.123 val
         #weights = [0.2740107476113237, 6.437404949557777e-05, 0.10460841357171742, 0.0724586189525137, 0.0001823365247053887, 0.0006540140675967686, 0.2740107476113237, 0.2740107476113237]
         
        
@@ -62,7 +89,10 @@ def main(weights):
     normalized_df = inst.Normalize(no_mcap_df, len(no_mcap_df.columns), inst.weights)
 
     # Calculating positive and negative values
-    impact = ['-', '+', '+', '+', '+', '-', '-', '-']
+    #impact = ['-', '+', '+', '+', '+', '-', '-', '-']
+    
+    #According to my regressions
+    impact = ['+', '-', '+', '+', '-', '-', '-', '-']
 
     p_sln, n_sln = inst.Calc_Values(normalized_df, len(normalized_df.columns), impact)
 
@@ -83,27 +113,21 @@ def main(weights):
         nn.append(temp_n)
         pp.append(temp_p)
         
-    # Appending new columns in dataset   
 
-    #df['distance positive'] = pp
-    #df['distance negative'] = nn
     df['Topsis Score'] = score
-
-    # calculating the rank according to topsis score
     df['Rank'] = (df['Topsis Score'].rank(method='max', ascending=False))
     dataset = df.astype({"Rank": int})
 
-    print(df)
     plt.figure(figsize=(10, 6)) # Optional: Adjusts the figure size
     plt.scatter(df['Topsis Score'], df['tobinsQ'], color='b') # You can customize the plot with markers, linestyles, and colors
     plt.title('Plot of A vs B') # Optional: Adds a title to the plot
     plt.xlabel('Topsis Score') # Label for the X-axis
     plt.ylabel('TobinsQ') # Label for the Y-axis
     plt.grid(True) # Optional: Adds a grid for easier visualization
-    plt.show()
+    #plt.show()
     
-    correlation, _ = pearsonr(df['Topsis Score'], df['tobinsQ'])
-    print(f"Correlation between Topsis score and Tobin's Q: {correlation}")
+    correlationspear, _ = stats.spearmanr(df['Topsis Score'], df['tobinsQ'])
+    print(f"Spearman's rank correlation: {correlationspear} \n")
     
     return df
         
