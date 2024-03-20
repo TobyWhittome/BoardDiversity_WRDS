@@ -10,6 +10,7 @@ class mcda:
       
     def Normalize(self, dataset, nCol, weights):
         for i in range(1, nCol):
+            dataset.iloc[:, i] = dataset.iloc[:, i].astype(float)
             temp = 0
             # Calculating Root of Sum of squares of a particular column
             for j in range(len(dataset)):
@@ -73,12 +74,13 @@ class mcda:
         return weights
 
     
-def main(weights):
+def main(df, weights):
     
     inst = mcda()
-    df = pd.read_excel('dataset/transformed_dataset.xlsx')
+    #df = pd.read_excel('dataset/transformed_dataset.xlsx')
+    
     no_mcap_df = df.copy()
-    no_mcap_df.drop(columns=['ticker','mktcapitalisation', 'tobinsQ'], inplace=True)
+    no_mcap_df.drop(columns=['ticker', 'tobinsQ'], inplace=True)
     
     #columns = [highvotingpower, INED %, 4.5Directors, directorTotalShare%, num_memberships, boardsize, CEO dual, dualclassvotes]
     if len(weights) != 0:
@@ -132,5 +134,7 @@ def main(weights):
     return df
         
 if __name__ == "__main__":
+  print("HERE")
 
   main([])
+  print("SDFISJ")

@@ -8,7 +8,7 @@ df = pd.read_excel('final_dataset.xlsx')
 df['boardsize_mean'] = df['boardsize'].sub(df['boardsize'].mean()).abs()
 del df['boardsize']
 
-excel_file_path = os.path.join(os.getcwd(), 'transformed_dataset.xlsx')
+excel_file_path = os.path.join(os.getcwd(), 'dataset/transformed_dataset.xlsx')
 df.to_excel(excel_file_path, index=False)
 
 

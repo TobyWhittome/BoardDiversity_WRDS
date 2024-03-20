@@ -86,7 +86,8 @@ class myData:
     return new_com_data
 
   def gender_ratio(self):
-    two_year_ago_date = datetime.date.today().replace(year=2022)
+    two_year_ago_date = self.today_date.replace(year=self.lastyear)
+    #two_year_ago_date = datetime.date.today().replace(year=2022)
     OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{two_year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
     
     sorted_OrgSummary = OrgSummary.dropna().sort_values(by=['ticker', 'annualreportdate'], ascending=[True, False])
@@ -210,7 +211,6 @@ def main(year):
 
 
 if __name__ == "__main__":
-  year = 2024
   print(main(year))
   #main()
 
