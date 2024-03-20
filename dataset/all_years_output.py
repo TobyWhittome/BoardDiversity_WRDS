@@ -1,5 +1,6 @@
 import create_dataset
 import os
+import wrds
 
 
 """ year = 2023
@@ -13,10 +14,11 @@ def output_excel_file(database, filename):
 
 #Currently 2007 is the earliest -- gong to find out which database causes this
 # Need to change the S&P500 companies that are being accounted for -- that is why it decreases.
+conn = wrds.Connection(wrds_username="twhittome")
 
 for year in range(2007, 2025):
-  df = create_dataset.main(year)
+  df = create_dataset.past_data(year, conn)
   num_rows = len(df)
   print(f"Number of rows is {num_rows} for the year {year}")
-  output_excel_file(df, f"prev_data/{year}_dataset.xlsx")
+  #output_excel_file(df, f"prev_data/{year}_dataset.xlsx")
   

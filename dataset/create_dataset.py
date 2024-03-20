@@ -42,7 +42,7 @@ class myData:
     FROM crsp_a_ccm.ccm_lookup c
     INNER JOIN crsp_a_indexes.dsp500list d
     ON c.lpermno = d.permno
-    WHERE d.ending BETWEEN '{self.year_ago_date}' AND '{self.today_date}'
+    WHERE d.start <= '{self.today_date}' AND d.ending >= '{self.year_ago_date}'
     """
     result = self.db.raw_sql(combined_query)
     return tuple(result['ticker'].drop_duplicates().reset_index(drop=True))
@@ -99,7 +99,7 @@ class myData:
     return new_com_data
 
   def gender_ratio(self):
-    two_year_ago_date = self.today_date.replace(year=self.lastyear)
+    two_year_ago_date = self.today_date.replace(year=self.lastyear - 1)
     #two_year_ago_date = datetime.date.today().replace(year=2022)
     OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{two_year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
     
@@ -178,7 +178,7 @@ class myData:
     FROM risk.rmgovernance g
     JOIN comp_execucomp.codirfin e 
     ON g.TICKER = e.TICKER AND e.YEAR = g.YEAR
-    WHERE g.YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND g.TICKER IN {self.SP500Tickers}
+    WHERE g.YEAR = {self.thisyear} AND g.TICKER IN {self.SP500Tickers}
     '''
     dataframe = pd.DataFrame(data=(self.db.raw_sql(query)))
     dataframe['dualclass'].replace(to_replace='YES', value=1, inplace=True)
@@ -195,6 +195,8 @@ class myData:
     #mcap = self.market_cap()
     tobinsQ = self.tobinsQ()
     genderRatio = self.gender_ratio()
+    
+    print(len(dualclass), len(committees), len(ceo), len(director_powerful), len(tobinsQ), len(genderRatio), self.thisyear)
 
     dfs = [genderRatio, director_powerful, committees, tobinsQ, ceo, dualclass]
     total_dataset = reduce(lambda left, right: pd.merge(left, right, on='ticker', how='inner'), dfs)
@@ -203,17 +205,26 @@ class myData:
     return final
 
 
+def past_data(year, conn):
+  
+  inst = myData()
+  inst.db = conn
+  inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date, inst.twoyearago = inst.set_dates(year)
+  inst.SP500Tickers = inst.get_hist_SP500_companies()
+  inst.SP500IDs = inst.get_SP500_IDs()
+  final_dataset = inst.combine_data()
+  
+  return final_dataset
+  
 
-def main(year):
+def main():
   start = time.time()
   inst = myData()
   inst.db = wrds.Connection(wrds_username="twhittome")
-  inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date, inst.twoyearago = inst.set_dates(year)
-  inst.SP500Tickers = inst.get_SP500_companies()
-  #inst.SP500Tickers = inst.get_hist_SP500_companies()
+  inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date, inst.twoyearago = inst.get_dates()
+  inst.SP500Tickers = inst.get_hist_SP500_companies()
   inst.SP500IDs = inst.get_SP500_IDs()
   
-
   final_dataset = inst.combine_data()
   inst.output_excel_file(final_dataset, 'final_dataset.xlsx')
 
@@ -221,11 +232,12 @@ def main(year):
   print("The time of execution of above program is :",
         round((end-start),1), "s")
   
+  print(final_dataset)
   return final_dataset
 
 
 if __name__ == "__main__":
-  main(2024)
+  main()
 
 
 
