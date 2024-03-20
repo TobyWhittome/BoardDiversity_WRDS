@@ -35,6 +35,19 @@ class myData:
     frame = pd.read_excel(url, engine='openpyxl', usecols=['Ticker'], skiprows=4).dropna()
     return tuple(frame['Ticker'])
   
+             
+  def get_hist_SP500_companies(self) -> tuple:
+    combined_query = f"""
+    SELECT c.tic as ticker
+    FROM crsp_a_ccm.ccm_lookup c
+    INNER JOIN crsp_a_indexes.dsp500list d
+    ON c.lpermno = d.permno
+    WHERE d.ending BETWEEN '{self.year_ago_date}' AND '{self.today_date}'
+    """
+    result = self.db.raw_sql(combined_query)
+    return tuple(result['ticker'].drop_duplicates().reset_index(drop=True))
+
+  
   def get_SP500_IDs(self):
     id_ticker = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT ticker, MIN(boardid) AS boardid FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers} GROUP BY ticker")))
     return tuple(id_ticker['boardid'])
@@ -195,10 +208,11 @@ def main(year):
   start = time.time()
   inst = myData()
   inst.db = wrds.Connection(wrds_username="twhittome")
-  inst.SP500Tickers = inst.get_SP500_companies()
-  inst.SP500IDs = inst.get_SP500_IDs()
-  #inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date = inst.get_dates(year)
   inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date, inst.twoyearago = inst.set_dates(year)
+  inst.SP500Tickers = inst.get_SP500_companies()
+  #inst.SP500Tickers = inst.get_hist_SP500_companies()
+  inst.SP500IDs = inst.get_SP500_IDs()
+  
 
   final_dataset = inst.combine_data()
   inst.output_excel_file(final_dataset, 'final_dataset.xlsx')
@@ -211,7 +225,7 @@ def main(year):
 
 
 if __name__ == "__main__":
-  print(main(year))
-  #main()
+  main(2024)
+
 
 
