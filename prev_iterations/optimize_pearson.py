@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.stats import pearsonr
 from scipy.optimize import minimize
-import MCDA.mcda_scratch as mcda_scratch
+import MCDA.MCDA as MCDA
 
-df = mcda_scratch.main([])
+df = MCDA.main([])
 
 # Objective function to be minimized
 def objective(weights, market_caps):

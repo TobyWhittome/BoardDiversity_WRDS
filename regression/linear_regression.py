@@ -8,7 +8,7 @@ def myfunc(x):
   return slope * x + intercept
 
 
-df = pd.read_excel('dataset/transformed_dataset.xlsx')
+df = pd.read_excel('transformed_dataset.xlsx')
 y = df['tobinsQ']
 df.drop(columns=['ticker'], inplace=True)
 df.drop(columns=['mktcapitalisation'], inplace=True)
@@ -32,7 +32,6 @@ for col in df.columns:
   print(f"Spearman's rank correlation: {correlationspear} \n")
   spearmans.append(correlationspear)
 
-""" 
   mymodel = list(map(myfunc, x))
 
   x = np.array(x)
@@ -48,7 +47,7 @@ for col in df.columns:
   #print(f'R-squared value: {r_squared}')
 
   print(f"the gradient is {slope}")
-  plt.show() """
+  plt.show()
   
   
 #Normalise all values in the spearmans array

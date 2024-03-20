@@ -4,6 +4,7 @@ import os
 import time
 import datetime
 from dateutil.relativedelta import relativedelta
+from functools import reduce
 
 class myData:
 
@@ -48,10 +49,13 @@ class myData:
     dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, AUDIT_MEMBERSHIP, CG_MEMBERSHIP, COMP_MEMBERSHIP, NOM_MEMBERSHIP, YEAR, CUSIP FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
 
     boardsize = dataframe.groupby('ticker').size().reset_index(name='boardsize')
-    membership_columns = ['audit_membership', 'cg_membership', 'comp_membership', 'nom_membership']
-    total_memberships = dataframe.groupby('ticker')[membership_columns].apply(lambda x: (x.notna().sum() > 0).sum()).reset_index(name='total_memberships')
 
-    return pd.merge(total_memberships, boardsize, on='ticker', how='inner')
+    #Not using number of committees anymore
+    #membership_columns = ['audit_membership', 'cg_membership', 'comp_membership', 'nom_membership']
+    #total_memberships = dataframe.groupby('ticker')[membership_columns].apply(lambda x: (x.notna().sum() > 0).sum()).reset_index(name='total_memberships')
+    #return pd.merge(total_memberships, boardsize, on='ticker', how='inner')
+
+    return boardsize
 
 
   def is_CEO_Dual(self):
@@ -82,8 +86,14 @@ class myData:
     return new_com_data
 
   def gender_ratio(self):
-    OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{self.year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
-    return OrgSummary
+    two_year_ago_date = datetime.date.today().replace(year=2022)
+    OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{two_year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
+    
+    sorted_OrgSummary = OrgSummary.dropna().sort_values(by=['ticker', 'annualreportdate'], ascending=[True, False])
+    fixed_Orgsummary = sorted_OrgSummary.drop_duplicates(subset=['ticker'], keep='first').reset_index(drop=True)
+ 
+    fixed_Orgsummary.drop(columns=['annualreportdate', 'numberdirectors'], inplace=True)
+    return fixed_Orgsummary
     
 
   def tobinsQ(self):
@@ -121,7 +131,10 @@ class myData:
     .reset_index(name='num_directors_>4.5'))
 
     result_df = dataframe.groupby('ticker').agg(
-    high_voting_power=('pcnt_ctrl_votingpower', lambda x: (x >= 10).sum()),
+    #high_voting_power=('pcnt_ctrl_votingpower', lambda x: (x >= 10).sum()),
+      
+    #voting power is the percentage directors with a voting power greater than 0
+    voting_power=('pcnt_ctrl_votingpower', lambda x: round(((x > 0).mean() * 100), 1)),
     percentage_INEDs=('classification', lambda x: round((x.isin(['I-NED', 'I', 'NI-NED'])).mean() * 100, 1))
     ).reset_index()
     
@@ -136,11 +149,12 @@ class myData:
     return final_df
   
   
-  def market_cap(self):
+    #Not using this anymore
+    """   def market_cap(self):
     #In millions
     mcap = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT ticker, MAX(mktcapitalisation) as mktcapitalisation FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers} GROUP BY ticker")))
     mcap = mcap.dropna().reset_index(drop=True)
-    return mcap
+    return mcap """
 
   
   def dualclass(self):
@@ -164,12 +178,13 @@ class myData:
     committees = self.count_committees()
     ceo = self.is_CEO_Dual()
     director_powerful = self.director_power()
-    mcap = self.market_cap()
+    #mcap = self.market_cap()
     tobinsQ = self.tobinsQ()
     genderRatio = self.gender_ratio()
-    #pd.merge(genderRatio, committees, on='ticker', how='inner')
-    total_dataset = pd.merge(pd.merge(pd.merge(pd.merge(pd.merge(director_powerful, committees, on='ticker', how='inner'), tobinsQ, on='ticker', how='inner'), ceo, on='ticker', how='inner'), dualclass, on='ticker', how='inner'), mcap, on='ticker', how='inner')
-    #drop duplicates
+
+    dfs = [genderRatio, director_powerful, committees, tobinsQ, ceo, dualclass]
+    total_dataset = reduce(lambda left, right: pd.merge(left, right, on='ticker', how='inner'), dfs)
+
     final = total_dataset.drop_duplicates().reset_index(drop=True)
     return final
 
@@ -185,7 +200,7 @@ def main(year):
   inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date, inst.twoyearago = inst.set_dates(year)
 
   final_dataset = inst.combine_data()
-  #inst.output_excel_file(final_dataset, 'final_dataset.xlsx')
+  inst.output_excel_file(final_dataset, 'final_dataset.xlsx')
 
   end = time.time()
   print("The time of execution of above program is :",
