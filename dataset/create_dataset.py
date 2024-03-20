@@ -14,7 +14,7 @@ class myData:
   def get_dates(self):
     today = datetime.date.today()
     one_month_ago = today - relativedelta(months=1)
-    thisYear = int(today.strftime("%Y"))
+    thisYear = int(today.strftime("%Y")) - 1
     lastyear = thisYear - 1
     modified_date = today.replace(year=lastyear)
     twoago = lastyear - 1
@@ -196,7 +196,7 @@ class myData:
     tobinsQ = self.tobinsQ()
     genderRatio = self.gender_ratio()
     
-    print(len(dualclass), len(committees), len(ceo), len(director_powerful), len(tobinsQ), len(genderRatio), self.thisyear)
+    #print(len(dualclass), len(committees), len(ceo), len(director_powerful), len(tobinsQ), len(genderRatio), self.thisyear)
 
     dfs = [genderRatio, director_powerful, committees, tobinsQ, ceo, dualclass]
     total_dataset = reduce(lambda left, right: pd.merge(left, right, on='ticker', how='inner'), dfs)
@@ -224,9 +224,8 @@ def main():
   inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date, inst.twoyearago = inst.get_dates()
   inst.SP500Tickers = inst.get_hist_SP500_companies()
   inst.SP500IDs = inst.get_SP500_IDs()
-  
   final_dataset = inst.combine_data()
-  inst.output_excel_file(final_dataset, 'final_dataset.xlsx')
+  inst.output_excel_file(final_dataset, 'dataset/final_dataset.xlsx')
 
   end = time.time()
   print("The time of execution of above program is :",

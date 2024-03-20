@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 
-df = pd.read_excel('final_dataset.xlsx')
+df = pd.read_excel('dataset/final_dataset.xlsx')
 
 #Board size mean
 df['boardsize_mean'] = df['boardsize'].sub(df['boardsize'].mean()).abs()

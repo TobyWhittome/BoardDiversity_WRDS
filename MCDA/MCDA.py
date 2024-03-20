@@ -55,7 +55,7 @@ class mcda:
         
         
         #Trial and error ---- 
-        weights = [0.303, 0.04, 0.277, 0.032, 0.101, 0.121, 0.024, 0.099]
+        weights = [0.303, 0.04, 0.277, 0.032, 0.101, 0.121, 0.024, 0.049, 0.05]
         
         
         #Trial and error ---- 1.833
@@ -77,12 +77,10 @@ class mcda:
 def main(df, weights):
     
     inst = mcda()
-    #df = pd.read_excel('dataset/transformed_dataset.xlsx')
     
     no_mcap_df = df.copy()
     no_mcap_df.drop(columns=['ticker', 'tobinsQ'], inplace=True)
     
-    #columns = [highvotingpower, INED %, 4.5Directors, directorTotalShare%, num_memberships, boardsize, CEO dual, dualclassvotes]
     if len(weights) != 0:
         inst.weights = weights
     else:
@@ -90,11 +88,7 @@ def main(df, weights):
         
     normalized_df = inst.Normalize(no_mcap_df, len(no_mcap_df.columns), inst.weights)
 
-    # Calculating positive and negative values
-    #impact = ['-', '+', '+', '+', '+', '-', '-', '-']
-    
-    #According to my regressions
-    impact = ['+', '-', '+', '+', '-', '-', '-', '-']
+    impact = ['+', '-', '+', '+', '-', '-', '-', '-', '+']
 
     p_sln, n_sln = inst.Calc_Values(normalized_df, len(normalized_df.columns), impact)
 
@@ -118,7 +112,7 @@ def main(df, weights):
 
     df['Topsis Score'] = score
     df['Rank'] = (df['Topsis Score'].rank(method='max', ascending=False))
-    dataset = df.astype({"Rank": int})
+    #dataset = df.astype({"Rank": int})
 
     plt.figure(figsize=(10, 6)) # Optional: Adjusts the figure size
     plt.scatter(df['Topsis Score'], df['tobinsQ'], color='b') # You can customize the plot with markers, linestyles, and colors
@@ -131,10 +125,10 @@ def main(df, weights):
     correlationspear, _ = stats.spearmanr(df['Topsis Score'], df['tobinsQ'])
     print(f"Spearman's rank correlation: {correlationspear} \n")
     
+    print(df)
     return df
         
 if __name__ == "__main__":
-  print("HERE")
+    df = pd.read_excel('dataset/transformed_dataset.xlsx')
+    main(df, [])
 
-  main([])
-  print("SDFISJ")
