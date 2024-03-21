@@ -20,5 +20,5 @@ for year in range(2007, 2025):
   df = create_dataset.past_data(year, conn)
   num_rows = len(df)
   print(f"Number of rows is {num_rows} for the year {year}")
-  #output_excel_file(df, f"prev_data/{year}_dataset.xlsx")
+  output_excel_file(df, f"prev_data/{year}_dataset.xlsx")
   

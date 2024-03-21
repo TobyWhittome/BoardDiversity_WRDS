@@ -125,10 +125,11 @@ def main(df, weights):
     correlationspear, _ = stats.spearmanr(df['Topsis Score'], df['tobinsQ'])
     print(f"Spearman's rank correlation: {correlationspear} \n")
     
-    print(df)
     return df
         
 if __name__ == "__main__":
     df = pd.read_excel('dataset/transformed_dataset.xlsx')
+    df.dropna(inplace=True)
+    
     main(df, [])
 

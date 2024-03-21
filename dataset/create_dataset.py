@@ -202,6 +202,7 @@ class myData:
     total_dataset = reduce(lambda left, right: pd.merge(left, right, on='ticker', how='inner'), dfs)
 
     final = total_dataset.drop_duplicates().reset_index(drop=True)
+    final.dropna(inplace=True)
     return final
 
 
