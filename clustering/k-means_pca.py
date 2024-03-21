@@ -6,11 +6,11 @@ from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 
 # Load the dataset
-df = pd.read_excel('final_dataset.xlsx')
+df = pd.read_excel('dataset/final_dataset.xlsx')
 
 # Assuming all columns except the first (e.g., an ID or ticker column) are features
 
-columns_to_cluster = ['high_voting_power', 'percentage_INEDs', 'num_directors_>4.5', 'total_share_%', 'total_memberships', 'boardsize', 'CEODuality', 'dualclass']
+columns_to_cluster = ['genderratio', 'nationalitymax', 'voting_power', 'percentage_INEDs', 'num_directors_>4.5', 'total_share_%', 'boardsize', 'CEODuality', 'dualclass']
 
 # Standardize the features
 scaler = StandardScaler()
