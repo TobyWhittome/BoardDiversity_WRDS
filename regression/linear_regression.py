@@ -8,7 +8,7 @@ def myfunc(x):
   return slope * x + intercept
 
 
-df = pd.read_excel('transformed_dataset.xlsx')
+df = pd.read_excel('dataset/transformed_dataset.xlsx')
 y = df['tobinsQ']
 df.drop(columns=['ticker'], inplace=True)
 df.drop(columns=['mktcapitalisation'], inplace=True)

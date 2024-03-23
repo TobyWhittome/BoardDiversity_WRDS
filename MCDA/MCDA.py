@@ -118,7 +118,13 @@ def main(df, weightsin):
     output['Topsis Score'] = score
     output['Rank'] = (output['Topsis Score'].rank(method='max', ascending=False))
     output['ticker'] = df['ticker']
+    output = output.sort_values(by='Rank')
 
+
+    print(output.to_string(index=False))
+
+
+    print(output)
     #output excel file of output
     output.to_excel('dataset/MCDATobinsQ.xlsx', index=False)
     

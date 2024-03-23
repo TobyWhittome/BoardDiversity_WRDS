@@ -58,3 +58,38 @@ for yi in range(n_clusters):
 
 plt.tight_layout()
 plt.show()
+
+
+from mpl_toolkits.mplot3d import Axes3D
+
+# Assuming your datasets_pca have 3 components for the 3D plot
+# Flatten the datasets for plotting
+flattened_data = np.concatenate(datasets_pca, axis=0)
+
+# We also need to flatten the clusters list to match the size of flattened_data
+flattened_clusters = np.concatenate([np.full(shape=dataset.shape[0], fill_value=cluster) for dataset, cluster in zip(datasets_pca, clusters)])
+
+# Create a 3D plot
+fig = plt.figure(figsize=(10, 7))
+ax = fig.add_subplot(111, projection='3d')
+
+# Color map for the clusters
+colors = ['r', 'g', 'b', 'y']
+
+for cluster in range(n_clusters):
+    # Get the data points that belong to the current cluster
+    cluster_data = flattened_data[flattened_clusters == cluster]
+    
+    # Plot them with a specific color
+    ax.scatter(cluster_data[:, 0], cluster_data[:, 1], cluster_data[:, 2], c=colors[cluster], label=f'Cluster {cluster + 1}')
+
+# Labeling the axes
+ax.set_xlabel('Component 1')
+ax.set_ylabel('Component 2')
+ax.set_zlabel('Component 3')
+
+# Adding a legend
+ax.legend()
+
+# Show plot
+plt.show()
