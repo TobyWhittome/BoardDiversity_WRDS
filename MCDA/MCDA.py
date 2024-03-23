@@ -2,6 +2,7 @@ import pandas as pd
 from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
 from scipy import stats
+import seaborn as sns
 
 class mcda:
     
@@ -43,6 +44,10 @@ class mcda:
 
         #Trial and error with new data ---- -0.4525
         weights = [0.15, 0.132, 0.203, 0.04, 0.177, 0.101, 0.151, 0.024, 0.019]
+
+        #Genetic algorithm output -- 0.137
+        weights = [7.40128150e-04, 4.36675609e-02, 3.56649252e-02, 2.00759761e-02, 1.12879591e-04, 1.58934464e-02, 5.14730934e-03, 2.24856145e-02, 8.56212160e-01]
+
         
         return weights
 
@@ -88,22 +93,36 @@ def main(df, weightsin):
 
     #df['Topsis Score'] = score
     #df['Rank'] = (df['Topsis Score'].rank(method='max', ascending=False))
+    #sort in order of rank
+    #df = df.sort_values(by='Rank')
     #dataset = df.astype({"Rank": int})
 
-    """ 
-    plt.figure(figsize=(10, 6)) # Optional: Adjusts the figure size
-    plt.scatter(df['Topsis Score'], df['tobinsQ'], color='b') # You can customize the plot with markers, linestyles, and colors
-    plt.title('Plot of A vs B') # Optional: Adds a title to the plot
-    plt.xlabel('Topsis Score') # Label for the X-axis
-    plt.ylabel('TobinsQ') # Label for the Y-axis
-    plt.grid(True) # Optional: Adds a grid for easier visualization
-    #plt.show() """
+
+    #Graph for Topsis Score vs Tobin's Q
+    """sns.set_theme()
+    plt.figure(figsize=(10, 6))
+    sns.scatterplot(x='Topsis Score', y='tobinsQ', data=df, color='b')
+    plt.title('Scatter plot of MCDA TOPSIS Score vs Tobin\'s Q for each company')
+    plt.xlabel('Topsis Score')
+    plt.ylabel('Tobins Q')
+    plt.ylim(-0.5, 15)
+    plt.grid(True)
+    plt.show() """
     
     correlationspear, _ = stats.spearmanr(score, df['tobinsQ'])
     #correlationspear, _ = stats.spearmanr(df['Topsis Score'], df['tobinsQ'])
-    #print(f"Spearman's rank correlation: {correlationspear} \n")
+    print(f"Spearman's rank correlation: {correlationspear} \n")
+
+    #create new dataframe
+    output = pd.DataFrame(columns=['ticker', 'Topsis Score'])
+    output['Topsis Score'] = score
+    output['Rank'] = (output['Topsis Score'].rank(method='max', ascending=False))
+    output['ticker'] = df['ticker']
+
+    #output excel file of output
+    output.to_excel('dataset/MCDATobinsQ.xlsx', index=False)
     
-    return correlationspear
+    return output, correlationspear
         
 if __name__ == "__main__":
     df = pd.read_excel('dataset/transformed_dataset.xlsx')

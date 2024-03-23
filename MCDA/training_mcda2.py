@@ -37,9 +37,9 @@ def average_scores():
 
 
     #Perform MCDA on all of them
-    mcda_df = mcda.main(df, [])
-    mcda_df2 = mcda.main(df2, [])
-    mcda_df3 = mcda.main(df3, [])
+    mcda_df, corr = mcda.main(df, [])
+    mcda_df2, corr = mcda.main(df2, [])
+    mcda_df3, corr = mcda.main(df3, [])
     
     
     largest = max(len(mcda_df), len(mcda_df2), len(mcda_df3))

@@ -226,13 +226,13 @@ def main():
   inst.SP500Tickers = inst.get_hist_SP500_companies()
   inst.SP500IDs = inst.get_SP500_IDs()
   final_dataset = inst.combine_data()
+  final_dataset.dropna(inplace=True)
   inst.output_excel_file(final_dataset, 'dataset/final_dataset.xlsx')
 
   end = time.time()
   print("The time of execution of above program is :",
         round((end-start),1), "s")
   
-  print(final_dataset)
   return final_dataset
 
 
