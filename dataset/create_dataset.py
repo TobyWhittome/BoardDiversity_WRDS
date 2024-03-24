@@ -203,6 +203,9 @@ class myData:
 
     final = total_dataset.drop_duplicates().reset_index(drop=True)
     final.dropna(inplace=True)
+    
+    final.rename(columns={'genderratio': 'Gender Ratio', 'nationalitymix' : 'Minority Ratio', 'voting_power' : 'VotePower', 'percentage_INEDs' : '%INEDS', 'num_directors_>4.5' : 'Number Directors\'Own>4.5', 'total_share_%' : 'Board Ownership', 'boardsize': 'Board Size', 'CEODuality' : 'CEO Dual', 'dualclass' : 'Dualclass Voting'}, inplace=True)
+     
     return final
 
 

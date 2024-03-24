@@ -39,8 +39,13 @@ def get_silhouette_score(data):
 def magandcardinailty(data, km_fit):
   cluster_colors = ['#b4d2b1', '#568f8b', '#1d4a60', '#cd7e59', '#ddb247', '#d15252']
   fig, (ax1, ax2, ax3) = plt.subplots(1,3,figsize=(12,4))
+  print(km_fit.labels_)
 
   #plot_cluster_cardinality(km_fit.labels_, ax=ax1, title="Cardinality", color=cluster_colors)
+  values, counts = np.unique(km_fit.labels_, return_counts=True)
+  ax1.set_title("Cardinality")
+  ax1.bar(values, counts, color=cluster_colors, width=0.5)
+  
   plot_cluster_magnitude(data,
                         km_fit.labels_,
                         km_fit.cluster_centers_,
@@ -63,12 +68,11 @@ def magandcardinailty(data, km_fit):
   
   
 def get_finaldset():
-  df = pd.read_excel('dataset/transformed_dataset.xlsx')
-  columns_to_cluster = ['voting_power', 'percentage_INEDs', 'num_directors_>4.5', 'total_share_%', 'CEODuality', 'dualclass', 'boardsize_mean']
-  # Standardize the features
+  df = pd.read_excel('dataset/final_dataset.xlsx')
+  columns_to_cluster = ['Gender Ratio', 'Minority Ratio', 'VotePower', '%INEDS', 'Number Directors\'Own>4.5', 'Board Ownership', 'Board Size', 'CEO Dual', 'Dualclass Voting']
   scaler = StandardScaler()
   data_scaled = scaler.fit_transform(df[columns_to_cluster])
-  print(data_scaled.shape)
+  #data_scaled = apply_PCA(data_scaled)
   data_scaled = pd.DataFrame(data_scaled, columns=columns_to_cluster)
   return df[columns_to_cluster], data_scaled
   
@@ -84,45 +88,26 @@ def get_factor_loadings():
       [-0.02257146,  0.10773019, -0.21646061,  0.02004274],
       [ 0.00647368,  0.07445822, -0.03491391, -0.30278987]
   ])
-  return factor_loadings
+  columns_to_cluster = [f'PC{i+1}' for i in range(factor_loadings.shape[1])]
+  factor_loadings = pd.DataFrame(factor_loadings, columns=columns_to_cluster)
+  return factor_loadings, factor_loadings
 
 def apply_PCA(data):
   #0.87 gets rid of 2 dimensions and has 0.319 for n=4
   pca = PCA(n_components=0.87)  # Retain 87% of the variance
   data_pca = pca.fit_transform(data)
+  columns = [f'PC{i+1}' for i in range(data_pca.shape[1])]
+  data_pca = pd.DataFrame(data_pca, columns=columns)
   return data_pca
 
 def ElbowVis(data):
   fig, ax = plt.subplots()
   visualizer = KElbowVisualizer(KMeans(), k=(2,7),ax=ax)
   visualizer.fit(data)
-
   ax.set_xticks(range(2,7))
   visualizer.show()
   plt.show()
-  
-""" def create_boxplot():
-  cluster_colors = ['#b4d2b1', '#568f8b', '#1d4a60', '#cd7e59', '#ddb247', '#d15252']
-  features = km.feature_names_in_
-  ncols = 4
-  nrows = len(features) // ncols + (len(features) % ncols > 0)
-  fig = plt.figure(figsize=(25,25))
 
-  for n, feature in enumerate(features):
-      ax = plt.subplot(nrows, ncols, n + 1)
-      box = raw_data[[feature, 'cluster']].boxplot(by='cluster',ax=ax,return_type='both',patch_artist = True)
-
-      for row_key, (ax,row) in box.iteritems():
-          ax.set_xlabel('cluster')
-          ax.set_title(feature,fontweight="bold")
-          for i,box in enumerate(row['boxes']):
-              box.set_facecolor(cluster_colors[i])
-              
-  
-  fig.suptitle('Feature distributions per cluster', fontsize=18, y=1)   
-  plt.tight_layout()
-  plt.show() """
-   
             
 
 def create_boxplot(raw_data, km):
@@ -242,7 +227,7 @@ class Radar(object):
 
 
 #Main
-#data = get_factor_loadings()
+#raw_data, data = get_factor_loadings()
 raw_data, data = get_finaldset()
 
 km = KMeans(n_clusters=3, 
@@ -257,14 +242,15 @@ km = KMeans(n_clusters=3,
 km_fit = km.fit(data)
 
 #ElbowVis(data)
-#get_silhouette_score(data)
-#magandcardinailty(data, km_fit)
+get_silhouette_score(data)
+magandcardinailty(data, km_fit)
 
 raw_data['cluster'] = km.labels_
 data['cluster'] = km.labels_
 
 #I can take a couple of boxplots as examples if not all of them are looking good.
-#create_boxplot(raw_data, km)
+create_boxplot(raw_data, km)
+
 
 
 X_mean = pd.concat([pd.DataFrame(raw_data.mean().drop('cluster'), columns=['mean']), 
@@ -282,7 +268,8 @@ X_std_dev_rel.drop(columns=['mean'], inplace=True)
 X_std_mean.drop(columns=['mean'], inplace=True)
 
 cluster_colors = ['#b4d2b1', '#568f8b', '#1d4a60', '#cd7e59', '#ddb247', '#d15252']
-#cluster_comparison_bar(X_dev_rel, cluster_colors, raw_data, title="Comparison of the mean per cluster to overall mean in percent")
+
+cluster_comparison_bar(X_dev_rel, cluster_colors, raw_data, title="Comparison of the mean per cluster to overall mean in percent")
 
 #Creates a singular bar chart containing all the variables on one chart.
 create_singular(X_dev_rel)
