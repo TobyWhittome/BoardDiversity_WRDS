@@ -67,10 +67,12 @@ def main(df, weightsin):
     else:
         inst.weights = inst.get_weights()
 
+    #Steps 1, 2 and 3
     normalized_df = inst.Normalize(no_mcap_df, len(no_mcap_df.columns), inst.weights)
 
     impact = ['-', '+', '+', '-', '+', '+', '-', '-', '-']
 
+    #Steps 4
     p_sln, n_sln = inst.Calc_Values(normalized_df, len(normalized_df.columns), impact)
 
     # calculating topsis score
@@ -80,12 +82,14 @@ def main(df, weightsin):
     
     
     # Calculating distances and Topsis score for each row
+    #Step 5
     for i in range(len(normalized_df)):
         temp_p, temp_n = 0, 0
         for j in range(1, len(normalized_df.columns)):
             temp_p = temp_p + (p_sln[j-1] - normalized_df.iloc[i, j])**2
             temp_n = temp_n + (n_sln[j-1] - normalized_df.iloc[i, j])**2
         temp_p, temp_n = temp_p**0.5, temp_n**0.5
+        #Step 6
         score.append(temp_n/(temp_p + temp_n))
         nn.append(temp_n)
         pp.append(temp_p)
