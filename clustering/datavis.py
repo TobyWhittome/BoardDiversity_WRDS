@@ -69,7 +69,8 @@ def magandcardinailty(data, km_fit):
   
 def get_finaldset():
   df = pd.read_excel('dataset/final_dataset.xlsx')
-  columns_to_cluster = ['Gender Ratio', 'Minority Ratio', 'VotePower', '%INEDS', 'Number Directors\'Own>4.5', 'Board Ownership', 'Board Size', 'CEO Dual', 'Dualclass Voting']
+  #columns_to_cluster = ['Gender Ratio', 'Minority Ratio', 'VotePower', '%INEDS', 'Number Directors\'Own>4.5', 'Board Ownership', 'Board Size', 'CEO Dual', 'Dualclass Voting']
+  columns_to_cluster = ['Gender Ratio', 'Minority Ratio', 'VotePower', '%INEDS', 'Number Directors\'Own>4.5', 'Board Ownership', 'Board Size', 'CEO Dual']
   scaler = StandardScaler()
   data_scaled = scaler.fit_transform(df[columns_to_cluster])
   #data_scaled = apply_PCA(data_scaled)
@@ -226,9 +227,28 @@ class Radar(object):
         self.ax.fill(angle, values,*args,**kw)
 
 
+def OG_elbow(data):
+  # Elbow method to find the optimal number of clusters
+  sse = []
+  for k in range(1, 11):
+      kmeans = KMeans(n_clusters=k, random_state=42).fit(data)
+      sse.append(kmeans.inertia_)
+
+  # Plot SSE for each *k*
+  plt.figure(figsize=(10, 6))
+  plt.plot(range(1, 11), sse, marker='o')
+  plt.title('Elbow Method')
+  plt.xlabel('Number of clusters')
+  plt.ylabel('SSE')
+  plt.show()
+
 #Main
 #raw_data, data = get_factor_loadings()
 raw_data, data = get_finaldset()
+
+ElbowVis(data)
+#OG_elbow(data)
+#get_silhouette_score(data)
 
 km = KMeans(n_clusters=3, 
             max_iter=300, 
@@ -237,19 +257,15 @@ km = KMeans(n_clusters=3,
             n_init=10, 
             random_state=42)
 
-#kmeans = KMeans(n_clusters=4, random_state=42)
-#km_fit = kmeans.fit_predict(data)
 km_fit = km.fit(data)
 
-#ElbowVis(data)
-get_silhouette_score(data)
-magandcardinailty(data, km_fit)
+#magandcardinailty(data, km_fit)
 
 raw_data['cluster'] = km.labels_
 data['cluster'] = km.labels_
 
-#I can take a couple of boxplots as examples if not all of them are looking good.
-create_boxplot(raw_data, km)
+
+#create_boxplot(raw_data, km)
 
 
 
@@ -269,10 +285,10 @@ X_std_mean.drop(columns=['mean'], inplace=True)
 
 cluster_colors = ['#b4d2b1', '#568f8b', '#1d4a60', '#cd7e59', '#ddb247', '#d15252']
 
-cluster_comparison_bar(X_dev_rel, cluster_colors, raw_data, title="Comparison of the mean per cluster to overall mean in percent")
+#cluster_comparison_bar(X_dev_rel, cluster_colors, raw_data, title="Comparison of the mean per cluster to overall mean in percent")
 
 #Creates a singular bar chart containing all the variables on one chart.
-create_singular(X_dev_rel)
+#create_singular(X_dev_rel)
 
 
 fig = plt.figure(figsize=(8, 8))
@@ -285,4 +301,4 @@ for k in range(0,km.n_clusters):
 
 radar.ax.legend()
 radar.ax.set_title("Cluster characteristics: Feature means per cluster", size=22, pad=60)
-plt.show()
+#plt.show()

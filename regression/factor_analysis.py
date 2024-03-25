@@ -6,12 +6,13 @@ from factor_analyzer.factor_analyzer import calculate_bartlett_sphericity
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import seaborn as sns
+import textwrap
 
 def create_heatmap(df, varifa):
     factors = 4
 
     # Prepare the plot
-    fig, ax = plt.subplots(figsize=(6.2, 8))  # Adjust the figsize as needed
+    fig, ax = plt.subplots(figsize=(6.6, 8))  # Adjust the figsize as needed
 
     # Use varifa.loadings_ to get the factor loading matrix
     factor_matrix = varifa.loadings_
@@ -24,26 +25,35 @@ def create_heatmap(df, varifa):
         ax.text(j, i, '{:0.2f}'.format(z), ha="center", va="center")
 
     # Set y-axis labels to variable names from df.columns
+    
+    # Wrap y-axis labels
     ax.set_yticks(np.arange(len(df.columns)))
-    ax.set_yticklabels(df.columns)
+    wrapped_labels = [textwrap.fill(label, width=13) for label in df.columns]
+
+    ax.set_yticklabels(wrapped_labels, fontweight='bold')
+
 
     # Set x-axis labels to factor numbers
     ax.set_xticks(np.arange(factors))
-    ax.set_xticklabels(["Factor {}".format(i+1) for i in range(factors)])
+    ax.set_xticklabels(["Factor {}".format(i+1) for i in range(factors)], fontweight='bold')
 
-    ax.set_title("Factor Analysis Varimax Loadings", fontweight='bold')
+    #ax.set_title("Factor Analysis Varimax Loadings", fontweight='bold')
 
     # Adjust layout
     plt.tight_layout()
 
     # Add a colorbar
-    cb = fig.colorbar(im, ax=ax, location='right', shrink=0.6, label="Loadings")
+    #Make the loadings label bold
+    
+    cb = fig.colorbar(im, ax=ax, location='right', shrink=0.6)
+    cb.set_label("Loadings", weight='bold')
 
     # Show the plot
     plt.show()
 
 
 df = pd.read_excel('dataset/final_dataset.xlsx')
+df.rename(columns={'Number Directors\'Own>4.5' : 'Number Directors\' Own>4.5'}, inplace=True)
 df.drop(columns=['ticker'], inplace=True)
 #df.drop(columns=['mktcapitalisation'], inplace=True)
 #create a 1D array of Tobin's Q
@@ -96,28 +106,51 @@ print(factor_scores.shape)
 
 sns.set_theme()
 
+plt.figure(figsize=(12, 10))  # Adjust the figure size as needed for a 2x2 layout
 
-plt.figure(figsize=(10, 6))
-
-sns.scatterplot(x=factor_scores[:, 0], y=tobins_q, data=df, color='b')
-plt.title(f'Scatter plot of Factor 1 loadings vs vs Tobin\'s Q', fontweight='bold')
-plt.xlabel('Factor 1 loadings')
-plt.ylabel('Tobins Q')
+# Plot for Factor 1
+plt.subplot(2, 2, 1)  # (rows, columns, panel number)
+sns.scatterplot(x=factor_scores[:, 0], y=tobins_q, color='b')
+#plt.title('Scatter plot of Factor 1 loadings vs Tobin\'s Q', fontweight='bold')
+plt.xlabel('Factor 1 loadings', fontweight='bold')
+plt.ylabel('Tobins Q', fontweight='bold')
 plt.ylim(-0.5, 15)
 plt.grid(True)
+
+# Plot for Factor 2
+plt.subplot(2, 2, 2)  # (rows, columns, panel number)
+sns.scatterplot(x=factor_scores[:, 1], y=tobins_q, color='b')
+#plt.title('Scatter plot of Factor 2 loadings vs Tobin\'s Q', fontweight='bold')
+plt.xlabel('Factor 2 loadings', fontweight='bold')
+plt.ylabel('Tobins Q', fontweight='bold')
+plt.ylim(-0.5, 15)
+plt.grid(True)
+
+# Plot for Factor 3
+plt.subplot(2, 2, 3)  # (rows, columns, panel number)
+sns.scatterplot(x=factor_scores[:, 2], y=tobins_q, color='b')
+#plt.title('Scatter plot of Factor 3 loadings vs Tobin\'s Q', fontweight='bold')
+plt.xlabel('Factor 3 loadings', fontweight='bold')
+plt.ylabel('Tobins Q', fontweight='bold')
+plt.ylim(-0.5, 15)
+plt.grid(True)
+
+# Plot for Factor 4
+plt.subplot(2, 2, 4)  # (rows, columns, panel number)
+sns.scatterplot(x=factor_scores[:, 3], y=tobins_q, color='b')
+#plt.title('Scatter plot of Factor 4 loadings vs Tobin\'s Q', fontweight='bold')
+plt.xlabel('Factor 4 loadings', fontweight='bold')
+plt.ylabel('Tobins Q', fontweight='bold')
+plt.ylim(-0.5, 15)
+plt.grid(True)
+
+plt.subplots_adjust(left=None, bottom=1, right=None, top=1, wspace=0.3, hspace=0.3)
+
+plt.tight_layout()  # Adjusts the subplots to fit into the figure area.
 plt.show()
 
 
-sns.scatterplot(x=factor_scores[:, 1], y=tobins_q, data=df, color='b')
-plt.title(f'Scatter plot of Factor 2 loadings vs vs Tobin\'s Q', fontweight='bold')
-plt.xlabel('Factor 2 loadings')
-plt.ylabel('Tobins Q')
-plt.ylim(-0.5, 15)
-plt.grid(True)
-plt.show()
-
-
-sns.scatterplot(x=factor_scores[:, 2], y=tobins_q, data=df, color='b')
+""" sns.scatterplot(x=factor_scores[:, 2], y=tobins_q, data=df, color='b')
 plt.title(f'Scatter plot of Factor 3 vs vs Tobin\'s Q', fontweight='bold')
 plt.xlabel('Factor 3 loadings')
 plt.ylabel('Tobins Q')
@@ -134,4 +167,4 @@ plt.xlabel('Factor 4 loadings')
 plt.ylabel('Tobins Q')
 plt.ylim(-0.5, 15)
 plt.grid(True)
-plt.show()
+plt.show() """
