@@ -35,8 +35,8 @@ class mcda:
 
     def get_weights(self):
         
-        weights = [0.02, 0.23, 0.2, 0.23, 0.03, 0.03, 0.04, 0.16, 0.1]
-        #Correlation Coefficient: 0.128
+        #0.1422
+        weights = [2, 30, 10, 13, 3, 3, 4, 16, 10]
         return weights
 
     
