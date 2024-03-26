@@ -32,23 +32,11 @@ class mcda:
                 p_sln[i-1], n_sln[i-1] = n_sln[i-1], p_sln[i-1]
         return p_sln, n_sln
     
+
     def get_weights(self):
-    
-        #Normalised indiv spearman's coeff scores
-        #weights = [0.00335242, 0.34013028, 0.11792744, 0.19255043, 0.10105673, 0.12141488, 0.02420027, 0.09936755]
         
-        
-        #Trial and error ---- 1919
-        weights = [0.303, 0.04, 0.277, 0.032, 0.101, 0.121, 0.024, 0.099]
-        
-
-        #Trial and error with new data ---- -0.4525
-        weights = [0.15, 0.132, 0.203, 0.04, 0.177, 0.101, 0.151, 0.024, 0.019]
-
-        #Genetic algorithm output -- 0.137
-        weights = [7.40128150e-04, 4.36675609e-02, 3.56649252e-02, 2.00759761e-02, 1.12879591e-04, 1.58934464e-02, 5.14730934e-03, 2.24856145e-02, 8.56212160e-01]
-
-        
+        weights = [0.02, 0.23, 0.2, 0.23, 0.03, 0.03, 0.04, 0.16, 0.1]
+        #Correlation Coefficient: 0.128
         return weights
 
     
@@ -124,13 +112,8 @@ def main(df, weightsin):
     output['ticker'] = df['ticker']
     output = output.sort_values(by='Rank')
 
-
-    print(output.to_string(index=False))
-
-
-    print(output)
     #output excel file of output
-    output.to_excel('dataset/MCDATobinsQ.xlsx', index=False)
+    #output.to_excel('dataset/MCDATobinsQ.xlsx', index=False)
     
     return output, correlationspear
         
