@@ -64,7 +64,7 @@ def get_year_ranges(years):
 
 
 
-plt.figure(figsize=(12, 10))
+plt.figure(figsize=(8, 8))
 
 for yi in range(n_clusters):
     plt.subplot(n_clusters, 1, yi + 1)
@@ -87,7 +87,7 @@ for yi in range(n_clusters):
     
     black_line = mlines.Line2D([], [], color='black', label=year_ranges_label)
     red_line = mlines.Line2D([], [], color='red', label='Cluster Center')
-    plt.legend(handles=[black_line, red_line], loc="upper right")
+    plt.legend(handles=[black_line, red_line], loc="upper left", prop={'weight':'bold'})
 
-plt.subplots_adjust(hspace=0.5)
+plt.subplots_adjust(left=0.03, right=0.98, top=0.95, bottom=0.05, hspace=0.5)
 plt.show()

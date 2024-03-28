@@ -44,8 +44,8 @@ def main(df, weightsin):
     
     inst = mcda()
 
-    df = pd.read_excel('dataset/transformed_dataset.xlsx')
-    df.dropna(inplace=True)
+    #df = pd.read_excel('dataset/transformed_dataset.xlsx')
+    #df.dropna(inplace=True)
     no_mcap_df = df.copy()
     no_mcap_df.drop(columns=['ticker', 'tobinsQ'], inplace=True)
 
