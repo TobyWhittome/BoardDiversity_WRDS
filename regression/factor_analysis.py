@@ -144,7 +144,7 @@ plt.ylabel('Tobins Q', fontweight='bold')
 plt.ylim(-0.5, 15)
 plt.grid(True)
 
-plt.subplots_adjust(left=None, bottom=1, right=None, top=1, wspace=0.3, hspace=0.3)
+plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=4, hspace=4)
 
 plt.tight_layout()  # Adjusts the subplots to fit into the figure area.
 plt.show()

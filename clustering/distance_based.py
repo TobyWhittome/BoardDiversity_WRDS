@@ -5,13 +5,14 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from tslearn.clustering import TimeSeriesKMeans
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+import matplotlib.lines as mlines
 
 # Function to process a single year's dataset
 def process_dataset(df, columns_to_cluster):
     data_scaled = StandardScaler().fit_transform(df[columns_to_cluster])
-    PCAbosh = PCA(n_components=0.8).fit_transform(data_scaled)
-    print(PCAbosh.shape)
-    return PCAbosh
+    data_scaled = PCA(n_components=0.83).fit_transform(data_scaled)
+    print(data_scaled.shape)
+    return data_scaled
   
 def load_and_truncate(filepath, min_length):
     df = pd.read_excel(filepath)
@@ -21,7 +22,7 @@ def load_and_truncate(filepath, min_length):
     return df
 
 
-years = ['2020', '2021', '2022']  # Add more years as needed
+years = ['2007', '2008', '2009', '2010', '2011', '2012', '2013','2014','2015', '2016', '2017', '2018', '2019','2020', '2021', '2022', '2023']
 files = [f'prev_data/{year}_dataset.xlsx' for year in years]
 
 columns_to_cluster = ['genderratio', 'nationalitymix', 'voting_power', 'percentage_INEDs', 'num_directors_>4.5', 'total_share_%', 'boardsize', 'CEODuality', 'dualclass']
@@ -31,65 +32,62 @@ columns_to_cluster = ['genderratio', 'nationalitymix', 'voting_power', 'percenta
 min_length = min(len(pd.read_excel(file)) for file in files)
 
 # Load and truncate datasets
-datasets = [load_and_truncate(file, min_length) for file in files]
+datasets = [load_and_truncate(file, min_length)[columns_to_cluster] for file in files]
 
 # Process each dataset and collect the PCA-transformed data
-datasets_pca = np.array([process_dataset(df, columns_to_cluster) for df in datasets])
-
+datasets_scaled = np.array([process_dataset(df, columns_to_cluster) for df in datasets])
 
 # Scale the data (important for DTW)
-datasets_scaled = TimeSeriesScalerMeanVariance().fit_transform(datasets_pca)
+datasets_scaled = TimeSeriesScalerMeanVariance().fit_transform(datasets)
 
 # Time-series clustering using DTW and KMeans
-n_clusters = 4  # Adjust based on your data
+n_clusters = 3
 model = TimeSeriesKMeans(n_clusters=n_clusters, metric="dtw", verbose=True, random_state=42)
 clusters = model.fit_predict(datasets_scaled)
 
-# Plotting the clusters
-plt.figure(figsize=(12, 8))
+
+def get_year_ranges(years):
+    years = sorted(set(int(year) for year in years))
+    ranges = []
+    start = years[0]
+
+    for i in range(1, len(years)):
+        if years[i] != years[i-1] + 1:
+            end = years[i-1]
+            if start == end:
+                ranges.append(f"{start}")
+            else:
+                ranges.append(f"{start}-{end}")
+            start = years[i]
+    ranges.append(f"{start}-{years[-1]}" if start != years[-1] else f"{start}")
+    return ranges
+
+
+
+plt.figure(figsize=(12, 10))
+
 for yi in range(n_clusters):
-    plt.subplot(n_clusters, 1, 1 + yi)
-    for xx in datasets_scaled[clusters == yi]:
-        plt.plot(xx.ravel(), "k-", alpha=.2)
-    plt.plot(model.cluster_centers_[yi].ravel(), "r-")
+    plt.subplot(n_clusters, 1, yi + 1)
+    # To track which series (and thus which years) are plotted in this cluster
+    plotted_years = []
+    
+    # Identify the indices of the series belonging to the current cluster
+    cluster_series_indices = np.where(clusters == yi)[0]
+    
+    for ix in cluster_series_indices:
+        plt.plot(datasets_scaled[ix].ravel(), "k-", alpha=0.2)
+        plotted_years.append(years[ix])
+    
+    plt.plot(model.cluster_centers_[yi].ravel(), "r-", label='Cluster Center')
     plt.xlim(0, datasets_scaled.shape[1])
     plt.ylim(-4, 4)
-    plt.title(f"Cluster {yi + 1}")
-
-plt.tight_layout()
-plt.show()
-
-
-from mpl_toolkits.mplot3d import Axes3D
-
-# Assuming your datasets_pca have 3 components for the 3D plot
-# Flatten the datasets for plotting
-flattened_data = np.concatenate(datasets_pca, axis=0)
-
-# We also need to flatten the clusters list to match the size of flattened_data
-flattened_clusters = np.concatenate([np.full(shape=dataset.shape[0], fill_value=cluster) for dataset, cluster in zip(datasets_pca, clusters)])
-
-# Create a 3D plot
-fig = plt.figure(figsize=(10, 7))
-ax = fig.add_subplot(111, projection='3d')
-
-# Color map for the clusters
-colors = ['r', 'g', 'b', 'y']
-
-for cluster in range(n_clusters):
-    # Get the data points that belong to the current cluster
-    cluster_data = flattened_data[flattened_clusters == cluster]
+    plt.title(f"Cluster {yi + 1}", fontweight='bold')
     
-    # Plot them with a specific color
-    ax.scatter(cluster_data[:, 0], cluster_data[:, 1], cluster_data[:, 2], c=colors[cluster], label=f'Cluster {cluster + 1}')
+    year_ranges_label = f"Years: {', '.join(get_year_ranges(plotted_years))}"
+    
+    black_line = mlines.Line2D([], [], color='black', label=year_ranges_label)
+    red_line = mlines.Line2D([], [], color='red', label='Cluster Center')
+    plt.legend(handles=[black_line, red_line], loc="upper right")
 
-# Labeling the axes
-ax.set_xlabel('Component 1')
-ax.set_ylabel('Component 2')
-ax.set_zlabel('Component 3')
-
-# Adding a legend
-ax.legend()
-
-# Show plot
+plt.subplots_adjust(hspace=0.5)
 plt.show()
