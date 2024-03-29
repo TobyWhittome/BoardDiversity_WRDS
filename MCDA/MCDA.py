@@ -110,6 +110,7 @@ def main(df, weightsin):
     output['Topsis Score'] = score
     output['Rank'] = (output['Topsis Score'].rank(method='max', ascending=False))
     output['ticker'] = df['ticker']
+    output['tobinsQ'] = df['tobinsQ']
     output = output.sort_values(by='Rank')
 
     #output excel file of output

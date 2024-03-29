@@ -23,13 +23,13 @@ def average_scores():
     new_df = pd.DataFrame(columns=['ticker', 'Topsis Score', 'years'])
 
     yearname = f'{year}_dataset'
-    df_og = pd.read_excel(f'prev_data/{yearname}.xlsx')
+    df_og = pd.read_excel(f'mcda_prev_data/{yearname}.xlsx')
 
     yearname2 = f'{year-1}_dataset'
-    df2_og = pd.read_excel(f'prev_data/{yearname2}.xlsx')
+    df2_og = pd.read_excel(f'mcda_prev_data/{yearname2}.xlsx')
 
     yearname3 = f'{year-2}_dataset'
-    df3_og = pd.read_excel(f'prev_data/{yearname3}.xlsx')
+    df3_og = pd.read_excel(f'mcda_prev_data/{yearname3}.xlsx')
 
     """ print(f"Year {year}")
     print(df_og)
@@ -78,7 +78,7 @@ def average_scores():
     new_df['Topsis Score'] = (mcda_df['Topsis Score'] + mcda_df2['Topsis Score'] + mcda_df3['Topsis Score']) / divisor
     new_df['ticker'] = largest_db['ticker']
     new_df['years'] = f'{year-2}-{year}'
-    new_df['tobinsQ'] = (df_og['tobinsQ'] + df2_og['tobinsQ'] + df3_og['tobinsQ']) / divisor
+    new_df['tobinsQ'] = (mcda_df['tobinsQ'] + mcda_df2['tobinsQ'] + mcda_df3['tobinsQ']) / divisor
     average_scores_list.append(new_df)
     
   return average_scores_list
@@ -87,9 +87,16 @@ def average_scores():
 #So I need to get the Average Tobin's Q values in as well?
 
 def visualize(average_scores_list):
+  
+  #Plot correlations against years
+  #First make a df of the years and correlations
+  correlations = []
+  yearz = []
   for df in average_scores_list:
     df.dropna(inplace=True)
     correlationspear, _ = stats.spearmanr(df['Topsis Score'], df['tobinsQ'])
+    yearz.append(df['years'].iloc[0])
+    correlations.append(correlationspear)
     
   
     #Just get one value from the years column
@@ -107,12 +114,22 @@ def visualize(average_scores_list):
     sns.set_theme()
     plt.figure(figsize=(10, 6))
     sns.scatterplot(x='Topsis Score', y='tobinsQ', data=df, color='b')
-    plt.title(f'Scatter plot of MCDA TOPSIS Score vs Tobin\'s Q for each company, from years {years}')
-    plt.xlabel('Topsis Score')
-    plt.ylabel('Tobins Q')
+    plt.title(f'TOPSIS Score vs Tobin\'s Q from years {years}', fontweight='bold')
+    plt.xlabel('Topsis Score', fontweight='bold')
+    plt.ylabel('Tobins Q', fontweight='bold')
     plt.ylim(-0.5, 15)
     plt.grid(True)
-    plt.show()
+    #plt.show()
+  
+  plt.figure(figsize=(10, 6))
+  sns.lineplot(x=yearz, y=correlations)
+  #plt.title('Spearman\'s rank correlation against years')
+  plt.xlabel('Years', fontweight='bold')
+  plt.ylabel('Spearman\'s rank correlation', fontweight='bold')
+  plt.ylim(-0.5, 0.5)
+  plt.grid(True)
+  plt.show()
+  
 
 if __name__ == "__main__":
   average_scores_list = average_scores()
