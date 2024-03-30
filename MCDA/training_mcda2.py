@@ -111,23 +111,26 @@ def visualize(average_scores_list):
         
 
     print(f"Spearman's rank correlation for year {years}: {correlationspear} \n")
-    sns.set_theme()
+    #sns.set_theme()
     plt.figure(figsize=(10, 6))
     sns.scatterplot(x='Topsis Score', y='tobinsQ', data=df, color='b')
-    plt.title(f'TOPSIS Score vs Tobin\'s Q from years {years}', fontweight='bold')
-    plt.xlabel('Topsis Score', fontweight='bold')
-    plt.ylabel('Tobins Q', fontweight='bold')
+    plt.title(f'{years}', fontweight='bold', fontsize=16)
+    plt.xlabel('Topsis Score', fontweight='bold', fontsize=16)
+    plt.ylabel('Tobins Q', fontweight='bold', fontsize=16)
+    plt.xticks(fontsize=14, fontweight='bold')
+    plt.yticks(fontsize=14, fontweight='bold')
     plt.ylim(-0.5, 15)
-    plt.grid(True)
-    #plt.show()
+  
   
   plt.figure(figsize=(10, 6))
-  sns.lineplot(x=yearz, y=correlations)
-  #plt.title('Spearman\'s rank correlation against years')
-  plt.xlabel('Years', fontweight='bold')
-  plt.ylabel('Spearman\'s rank correlation', fontweight='bold')
+  plt.plot(yearz, correlations, color='red', linewidth=3)
+  plt.xlabel('Year Groups', fontweight='bold', fontsize=16)
+  plt.ylabel('Spearman\'s Rank', fontweight='bold', fontsize=16)
+  plt.xticks(fontsize=14, fontweight='bold')
+  plt.yticks(fontsize=14, fontweight='bold')
   plt.ylim(-0.5, 0.5)
   plt.grid(True)
+  plt.gca().invert_xaxis()
   plt.show()
   
 

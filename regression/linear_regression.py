@@ -11,7 +11,7 @@ def myfunc(x):
 df = pd.read_excel('dataset/transformed_dataset.xlsx')
 y = df['tobinsQ']
 df.drop(columns=['ticker'], inplace=True)
-df.drop(columns=['mktcapitalisation'], inplace=True)
+#df.drop(columns=['mktcapitalisation'], inplace=True)
 df.drop(columns=['tobinsQ'], inplace=True)
 
 spearmans = []
@@ -48,10 +48,3 @@ for col in df.columns:
 
   print(f"the gradient is {slope}")
   plt.show()
-  
-  
-#Normalise all values in the spearmans array
-positive_array = np.abs(spearmans)
-weights_array = positive_array / positive_array.sum()
-#normalized_array = (positive_array - positive_array.min()) / (positive_array.max() - positive_array.min())
-print(weights_array)

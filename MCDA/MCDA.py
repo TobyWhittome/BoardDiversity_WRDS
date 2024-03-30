@@ -3,6 +3,7 @@ from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
 from scipy import stats
 import seaborn as sns
+import numpy as np
 
 class mcda:
     
@@ -91,15 +92,18 @@ def main(df, weightsin):
 
 
     #Graph for Topsis Score vs Tobin's Q
-    """sns.set_theme()
-    plt.figure(figsize=(10, 6))
-    sns.scatterplot(x='Topsis Score', y='tobinsQ', data=df, color='b')
-    plt.title('Scatter plot of MCDA TOPSIS Score vs Tobin\'s Q for each company')
-    plt.xlabel('Topsis Score')
-    plt.ylabel('Tobins Q')
+    """ plt.figure(figsize=(10, 6))
+    sns.scatterplot(x=score, y='tobinsQ', data=df, color='b')
+    #plt.title('Scatter plot of MCDA TOPSIS Score vs Tobin\'s Q for each company')
+    plt.xlabel('Topsis Score', fontweight='bold', fontsize=16)
+    plt.ylabel('Tobins Q', fontweight='bold', fontsize=16)
+    plt.yticks(fontsize=14, fontweight='bold')
     plt.ylim(-0.5, 15)
-    plt.grid(True)
+    #plt.xlim(0.35, 0.8)
+    #Make x axis have values every 0.05
+    plt.xticks(np.arange(0.35, 0.8, step=0.05), fontsize=14, fontweight='bold')
     plt.show() """
+    
     
     correlationspear, _ = stats.spearmanr(score, df['tobinsQ'])
     #correlationspear, _ = stats.spearmanr(df['Topsis Score'], df['tobinsQ'])

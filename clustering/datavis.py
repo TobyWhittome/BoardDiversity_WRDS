@@ -69,8 +69,8 @@ def magandcardinailty(data, km_fit):
   
 def get_finaldset():
   df = pd.read_excel('dataset/final_dataset.xlsx')
-  #columns_to_cluster = ['Gender Ratio', 'Minority Ratio', 'VotePower', '%INEDS', 'Number Directors\'Own>4.5', 'Board Ownership', 'Board Size', 'CEO Dual', 'Dualclass Voting']
-  columns_to_cluster = ['Gender Ratio', 'Minority Ratio', 'VotePower', '%INEDS', 'Number Directors\'Own>4.5', 'Board Ownership', 'Board Size', 'CEO Dual']
+  df.rename(columns={'Number Directors\'Own>4.5':'Directors>4.5'}, inplace=True)
+  columns_to_cluster = ['Gender Ratio', 'Minority Ratio', 'VotePower', '%INEDS', 'Directors>4.5', 'Board Ownership', 'Board Size', 'CEO Dual', 'Dualclass Voting']
   scaler = StandardScaler()
   data_scaled = scaler.fit_transform(df[columns_to_cluster])
   #data_scaled = apply_PCA(data_scaled)
@@ -105,7 +105,13 @@ def ElbowVis(data):
   fig, ax = plt.subplots()
   visualizer = KElbowVisualizer(KMeans(), k=(2,7),ax=ax)
   visualizer.fit(data)
-  ax.set_xticks(range(2,7))
+  ax.set_xticks(range(2,7), fontweight='bold')
+  ax.set_yticks(range(2200, 4000, 200), fontweight='bold')
+  ax.set_xlabel('K', fontsize=16, fontweight='bold')
+  ax.set_ylabel('Distortion Score', fontsize=16, fontweight='bold') 
+  ax.set_title('', fontsize=18, fontweight='bold')
+  #Mak
+  plt.subplots_adjust(top=0.995)
   visualizer.show()
   plt.show()
 
@@ -178,25 +184,29 @@ def cluster_comparison_bar(X_comparison, colors, raw_data, deviation=True ,title
     plt.show()
     
 def create_singular(X_dev_rel):
-  colors = ['#9EBD6E','#81a094','#775b59','#32161f', '#946846', '#E3C16F', '#fe938c', '#E6B89C','#EAD2AC',
-          '#DE9E36', '#4281A4','#37323E','#95818D']
+  colors = ['#775b59','#9EBD6E','#81a094','#32161f', '#957DAD', '#DE9E36','#fe938c','#37323E','#95818D']
 
-  fig = plt.figure(figsize=(10,5), dpi=200)
+  fig = plt.figure(figsize=(12,5), dpi=200)
+  ax1= fig.add_subplot()
   X_dev_rel.T.plot(kind='bar', 
-                        ax=fig.add_subplot(), 
-                        title="Cluster characteristics", 
+                        ax=ax1, 
                         color=colors,
-                        xlabel="Cluster",
-                        ylabel="Deviation from overall mean in %"
+                        
                         )
   plt.axhline(y=0, linewidth=1, ls='--', color='black')
   plt.legend(bbox_to_anchor=(1.04,1))
   fig.autofmt_xdate(rotation=0)
-  plt.tight_layout()
+  plt.ylim(-100, 100)
+  
+  ax1.set_xlabel("Cluster", fontsize=12, fontweight='bold')
+  ax1.set_ylabel("Deviation from overall mean in %", fontsize=12, fontweight='bold')
+  #ax1.tick_params(axis='x', labelsize=10, labelrotation=0, labelweight='bold')
+  #ax1.tick_params(axis='y', labelsize=10, labelweight='bold')
+  
+  plt.tight_layout(rect=[0.05, 0.05, 0.85, 1])
   plt.show()
   
-  
-  
+
 class Radar(object):
     def __init__(self, figure, title, labels, rect=None):
         if rect is None:
@@ -207,7 +217,7 @@ class Radar(object):
         
         self.axes = [figure.add_axes(rect, projection='polar', label='axes%d' % i) for i in range(self.n)]
         self.ax = self.axes[0]
-        self.ax.set_thetagrids(self.angles, labels=title, fontsize=14, backgroundcolor="white",zorder=999) # Feature names
+        self.ax.set_thetagrids(self.angles, labels=title, fontsize=16, backgroundcolor="white", fontweight='bold', zorder=999) # Feature names
         self.ax.set_yticklabels([])
         
         for ax in self.axes[1:]:
@@ -218,8 +228,13 @@ class Radar(object):
         for ax, angle, label in zip(self.axes, self.angles, labels):
             ax.spines['polar'].set_color('black')
             ax.spines['polar'].set_zorder(-99)
+            
                      
     def plot(self, values, *args, **kw):
+        print(values)
+        value_cap = 1
+        if value_cap is not None:
+              values = np.minimum(values, value_cap)
         angle = np.deg2rad(np.r_[self.angles, self.angles[0]])
         values = np.r_[values, values[0]]
         self.ax.plot(angle, values, *args, **kw)
@@ -299,6 +314,8 @@ for k in range(0,km.n_clusters):
     cluster_data = X_std_mean[k].values.tolist()
     radar.plot(cluster_data,  '-', lw=2, color=cluster_colors[k], alpha=0.7, label='cluster {}'.format(k))
 
-radar.ax.legend()
-radar.ax.set_title("Cluster characteristics: Feature means per cluster", size=22, pad=60)
+#radar.ax.legend(fontsize=14, fontweight='bold')
+radar.ax.legend(prop={'size': 14, 'weight': 'bold'}, markerscale=4, loc='upper right', bbox_to_anchor=(1.1, 1.05))
+#radar.ax.set_title("Cluster characteristics: Feature means per cluster", size=22, pad=60)
+fig.subplots_adjust(left=0.05, right=0.95)
 #plt.show()

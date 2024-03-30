@@ -104,7 +104,6 @@ print(f"Factor correlations with Tobin's Q: {regression_model.coef_}")
 #Create scatterplot for factor scores vs tobins Q, using matplotlib
 print(factor_scores.shape)
 
-sns.set_theme()
 
 plt.figure(figsize=(12, 10))  # Adjust the figure size as needed for a 2x2 layout
 
@@ -112,37 +111,45 @@ plt.figure(figsize=(12, 10))  # Adjust the figure size as needed for a 2x2 layou
 plt.subplot(2, 2, 1)  # (rows, columns, panel number)
 sns.scatterplot(x=factor_scores[:, 0], y=tobins_q, color='b')
 #plt.title('Scatter plot of Factor 1 loadings vs Tobin\'s Q', fontweight='bold')
-plt.xlabel('Factor 1 loadings', fontweight='bold')
-plt.ylabel('Tobins Q', fontweight='bold')
+plt.xlabel('Factor 1 loadings', fontweight='bold', fontsize=16)
+plt.ylabel('Tobins Q', fontweight='bold', fontsize=16)
+plt.yticks(fontsize=14, fontweight='bold')
+plt.xticks(fontsize=14, fontweight='bold')
 plt.ylim(-0.5, 15)
-plt.grid(True)
+
 
 # Plot for Factor 2
 plt.subplot(2, 2, 2)  # (rows, columns, panel number)
 sns.scatterplot(x=factor_scores[:, 1], y=tobins_q, color='b')
 #plt.title('Scatter plot of Factor 2 loadings vs Tobin\'s Q', fontweight='bold')
-plt.xlabel('Factor 2 loadings', fontweight='bold')
-plt.ylabel('Tobins Q', fontweight='bold')
+plt.xlabel('Factor 2 loadings', fontweight='bold', fontsize=16)
+plt.ylabel('Tobins Q', fontweight='bold', fontsize=16)
+plt.yticks(fontsize=14, fontweight='bold')
+plt.xticks(fontsize=14, fontweight='bold')
 plt.ylim(-0.5, 15)
-plt.grid(True)
+
 
 # Plot for Factor 3
 plt.subplot(2, 2, 3)  # (rows, columns, panel number)
 sns.scatterplot(x=factor_scores[:, 2], y=tobins_q, color='b')
 #plt.title('Scatter plot of Factor 3 loadings vs Tobin\'s Q', fontweight='bold')
-plt.xlabel('Factor 3 loadings', fontweight='bold')
-plt.ylabel('Tobins Q', fontweight='bold')
+plt.xlabel('Factor 3 loadings', fontweight='bold', fontsize=16)
+plt.ylabel('Tobins Q', fontweight='bold', fontsize=16)
+plt.yticks(fontsize=14, fontweight='bold')
+plt.xticks(fontsize=14, fontweight='bold')
 plt.ylim(-0.5, 15)
-plt.grid(True)
+
 
 # Plot for Factor 4
 plt.subplot(2, 2, 4)  # (rows, columns, panel number)
 sns.scatterplot(x=factor_scores[:, 3], y=tobins_q, color='b')
 #plt.title('Scatter plot of Factor 4 loadings vs Tobin\'s Q', fontweight='bold')
-plt.xlabel('Factor 4 loadings', fontweight='bold')
-plt.ylabel('Tobins Q', fontweight='bold')
+plt.xlabel('Factor 4 loadings', fontweight='bold', fontsize=16)
+plt.ylabel('Tobins Q', fontweight='bold', fontsize=16)
+plt.yticks(fontsize=14, fontweight='bold')
+plt.xticks(fontsize=14, fontweight='bold')
 plt.ylim(-0.5, 15)
-plt.grid(True)
+
 
 plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=4, hspace=4)
 
