@@ -1,4 +1,3 @@
-from yellowbrick.cluster import KElbowVisualizer
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -7,48 +6,17 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import numpy as np
-from ds_utils.unsupervised import plot_cluster_cardinality, plot_cluster_magnitude, plot_magnitude_vs_cardinality
+from ds_utils.unsupervised import plot_cluster_magnitude, plot_magnitude_vs_cardinality
 from scipy.spatial.distance import euclidean
 import matplotlib.pyplot as plt
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 import matplotlib.patches as mpatches
 
-def get_silhouette_score(data):
-  silhouette_scores = []
-  for k in range(2, 7):
-      km = KMeans(n_clusters=k, 
-                  max_iter=300, 
-                  tol=1e-04, 
-                  init='k-means++', 
-                  n_init=10, 
-                  random_state=42)
-      km.fit(data)
-      silhouette_scores.append(silhouette_score(data, km.labels_))
-
-  fig, ax = plt.subplots()
-  ax.plot(range(2, 7), silhouette_scores, 'bx-')
-  ax.set_title('Silhouette Score Method')
-  ax.set_xlabel('Number of clusters')
-  ax.set_ylabel('Silhouette Scores')
-  plt.xticks(range(2, 7))
-  plt.tight_layout()
-  plt.show()
-
-
 def magandcardinailty(data, km_fit):
-  cluster_colors = ['#b4d2b1', '#568f8b', '#1d4a60', '#cd7e59', '#ddb247', '#d15252']
+  cluster_colors = ['#b4d2b1', '#568f8b', '#1d4a60']
   fig, (ax1, ax2) = plt.subplots(1,2,figsize=(8,4))
   print(km_fit.labels_)
-
-  """   #plot_cluster_cardinality(km_fit.labels_, ax=ax1, title="Cardinality", color=cluster_colors)
-  values, counts = np.unique(km_fit.labels_, return_counts=True)
-  ax1.set_title("Cardinality", fontweight='bold')
-  ax1.set_xlabel("Cluster Label", fontweight='bold')
-  ax1.set_ylabel("Number of observations", fontweight='bold')
-  ax1.set_xticks([0, 1, 2]) 
-  ax1.set_xticklabels(['A', 'B', 'C']) 
-  ax1.bar(values, counts, color=cluster_colors, width=0.5) """
   
   plot_cluster_magnitude(data,
                         km_fit.labels_,
@@ -67,14 +35,12 @@ def magandcardinailty(data, km_fit):
                                 title="Magnitude vs. Cardinality")
   
   ax1.set_title("Magnitude", fontweight='bold')
-  ax1.set_xlabel("Cluster Label", fontweight='bold')  # Replace "Your X Label" with the actual label
+  ax1.set_xlabel("Cluster Label", fontweight='bold')
   ax1.set_ylabel("Total Point-to-Centroid Distance", fontweight='bold')
   ax1.set_xticklabels(['A', 'B', 'C']) 
-
   ax2.set_title("Magnitude vs. Cardinality", fontweight='bold')
-  ax2.set_xlabel("Cardinality", fontweight='bold')  # Again, replace with the actual X label
+  ax2.set_xlabel("Cardinality", fontweight='bold')
   ax2.set_ylabel("Magnitude", fontweight='bold') 
-
   fig.autofmt_xdate(rotation=0)
   plt.tight_layout()
   plt.show()
@@ -83,7 +49,6 @@ def magandcardinailty(data, km_fit):
 def get_finaldset():
   df = pd.read_excel('dataset/final_dataset.xlsx')
   df.rename(columns={'Number Directors\'Own>4.5':'Blockholders', 'Minority Ratio' : 'Ethnicity Ratio', 'VotePower' : 'Vote Power'}, inplace=True)
-  print(df)
   columns_to_cluster = ['Gender Ratio', 'Ethnicity Ratio', 'Vote Power', '%INEDS', 'Blockholders', 'Board Ownership', 'Board Size', 'CEO Dual', 'Dualclass Voting']
   scaler = StandardScaler()
   data_scaled = scaler.fit_transform(df[columns_to_cluster])
@@ -108,22 +73,20 @@ def get_factor_loadings():
   return factor_loadings, factor_loadings
 
 def apply_PCA(data):
-  #0.87 gets rid of 2 dimensions and has 0.319 for n=4
-  pca = PCA(n_components=0.87)  # Retain 87% of the variance
+  pca = PCA(n_components=0.87)
   data_pca = pca.fit_transform(data)
   columns = [f'PC{i+1}' for i in range(data_pca.shape[1])]
   data_pca = pd.DataFrame(data_pca, columns=columns)
   return data_pca
 
-            
 
 def create_boxplot(raw_data, km):
     cluster_colors = ['#b4d2b1', '#568f8b', '#1d4a60', '#cd7e59', '#ddb247', '#d15252']
     features = km.feature_names_in_
-    ncols = 3  # Decrease number of columns to spread plots out more vertically
+    ncols = 3  
     nrows = len(features) // ncols + (len(features) % ncols > 0)
-    fig_width = ncols * 7  # Dynamic sizing: 7 inches per column
-    fig_height = nrows * 5  # Dynamic sizing: 5 inches per row
+    fig_width = ncols * 7 
+    fig_height = nrows * 5
     fig = plt.figure(figsize=(fig_width, fig_height))
 
     for n, feature in enumerate(features):
@@ -137,23 +100,18 @@ def create_boxplot(raw_data, km):
                 box.set_facecolor(cluster_colors[i])
 
     fig.suptitle('Feature distributions per cluster', fontsize=18, y=1.02)
-    plt.subplots_adjust(left=0.05, right=0.95, top=0.9, bottom=0.05, hspace=0.4, wspace=0.3)  # Adjust the layout
+    plt.subplots_adjust(left=0.05, right=0.95, top=0.9, bottom=0.05, hspace=0.4, wspace=0.3)
     plt.show()
 
 
 def cluster_comparison_bar(X_comparison, colors, raw_data, deviation=True ,title="Cluster results"):
     features = X_comparison.index
     ncols = 3
-    # calculate number of rows
     nrows = len(features) // ncols + (len(features) % ncols > 0)
-    # set figure size
-    fig_width = ncols * 7  # Dynamic sizing: 7 inches per column
-    fig_height = nrows * 5  # Dynamic sizing: 5 inches per row
+    fig_width = ncols * 7 
+    fig_height = nrows * 5
     fig = plt.figure(figsize=(fig_width, fig_height))
-    #fig = plt.figure(figsize=(15,15), dpi=200)
-    #interate through every feature
     for n, feature in enumerate(features):
-        # create chart
         ax = plt.subplot(nrows, ncols, n + 1)
         X_comparison[X_comparison.index==feature].plot(kind='bar', ax=ax, title=feature, 
                                                             color=colors[0:raw_data.cluster.nunique()],
@@ -179,13 +137,11 @@ def cluster_comparison_bar(X_comparison, colors, raw_data, deviation=True ,title
     fig.suptitle(title, fontsize=18, y=1)
     fig.supylabel('Deviation from overall mean in %')
     plt.tight_layout()
-    #plt.subplots_adjust(top=0.93)
     plt.subplots_adjust(left=0.05, right=0.95, top=0.9, bottom=0.05, hspace=0.4, wspace=0.3)
     plt.show()
     
 def create_singular(X_dev_rel):
   colors = ['#3a4cc0', '#6181e9', '#8daffd', '#b8cff9', '#1f77b4', '#f4c4ac', '#f4997a', '#dd604c', '#b30326']
-  #colors = ['#775b59','#9EBD6E','#81a094','#32161f', '#957DAD', '#DE9E36','#fe938c','#37323E','#95818D']
 
   fig = plt.figure(figsize=(11,5), dpi=200)
   ax1= fig.add_subplot()
@@ -202,8 +158,6 @@ def create_singular(X_dev_rel):
   ax1.set_xlabel("Cluster", fontsize=12, fontweight='bold')
   ax1.set_ylabel("Deviation from overall mean in %", fontsize=12, fontweight='bold')
   ax1.set_xticklabels(['A', 'B', 'C'])
-  #ax1.tick_params(axis='x', labelsize=10, labelrotation=0, labelweight='bold')
-  #ax1.tick_params(axis='y', labelsize=10, labelweight='bold')
   
   plt.tight_layout(rect=[0.05, 0.05, 0.85, 1])
   plt.show()
@@ -219,7 +173,7 @@ class Radar(object):
         
         self.axes = [figure.add_axes(rect, projection='polar', label='axes%d' % i) for i in range(self.n)]
         self.ax = self.axes[0]
-        self.ax.set_thetagrids(self.angles, labels=title, fontsize=16, backgroundcolor="white", fontweight='bold', zorder=999) # Feature names
+        self.ax.set_thetagrids(self.angles, labels=title, fontsize=16, backgroundcolor="white", fontweight='bold', zorder=999)
         self.ax.set_yticklabels([])
         
         for ax in self.axes[1:]:
@@ -267,11 +221,8 @@ def OG_elbow(data):
 
 
 #Main
-#raw_data, data = get_factor_loadings()
 raw_data, data = get_finaldset()
-
 OG_elbow(data)
-#get_silhouette_score(data)
 
 km = KMeans(n_clusters=3, 
             max_iter=300, 
@@ -282,15 +233,12 @@ km = KMeans(n_clusters=3,
 
 km_fit = km.fit(data)
 
-#magandcardinailty(data, km_fit)
+magandcardinailty(data, km_fit)
 
 raw_data['cluster'] = km.labels_
 data['cluster'] = km.labels_
 
-
-#create_boxplot(raw_data, km)
-
-
+create_boxplot(raw_data, km)
 
 X_mean = pd.concat([pd.DataFrame(raw_data.mean().drop('cluster'), columns=['mean']), 
                    raw_data.groupby('cluster').mean().T], axis=1)
@@ -308,10 +256,9 @@ X_std_mean.drop(columns=['mean'], inplace=True)
 
 cluster_colors = ['#b4d2b1', '#568f8b', '#1d4a60', '#cd7e59', '#ddb247', '#d15252']
 
-#cluster_comparison_bar(X_dev_rel, cluster_colors, raw_data, title="Comparison of the mean per cluster to overall mean in percent")
+cluster_comparison_bar(X_dev_rel, cluster_colors, raw_data, title="Comparison of the mean per cluster to overall mean in percent")
 
-#Creates a singular bar chart containing all the variables on one chart.
-#create_singular(X_dev_rel)
+create_singular(X_dev_rel)
 
 
 fig = plt.figure(figsize=(8, 8))

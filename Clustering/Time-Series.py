@@ -24,9 +24,7 @@ def load_and_truncate(filepath, min_length):
 
 years = ['2007', '2008', '2009', '2010', '2011', '2012', '2013','2014','2015', '2016', '2017', '2018', '2019','2020', '2021', '2022', '2023']
 files = [f'prev_data/{year}_dataset.xlsx' for year in years]
-
 columns_to_cluster = ['genderratio', 'nationalitymix', 'voting_power', 'percentage_INEDs', 'num_directors_>4.5', 'total_share_%', 'boardsize', 'CEODuality', 'dualclass']
-
 
 # Find the number of rows in the smallest dataset
 min_length = min(len(pd.read_excel(file)) for file in files)
@@ -63,7 +61,6 @@ def get_year_ranges(years):
     return ranges
 
 
-
 plt.figure(figsize=(8, 8))
 clusternames = ['A', 'B', 'C']
 cluster_colours = ['#b4d2b1', '#568f8b', '#1d4a60']
@@ -72,10 +69,8 @@ cluster_colours = ['#f24834', '#fb8c6c', '#c0151a']
 
 for yi in range(n_clusters):
     plt.subplot(n_clusters, 1, yi + 1)
-    # To track which series (and thus which years) are plotted in this cluster
     plotted_years = []
     
-    # Identify the indices of the series belonging to the current cluster
     cluster_series_indices = np.where(clusters == yi)[0]
     
     for ix in cluster_series_indices:

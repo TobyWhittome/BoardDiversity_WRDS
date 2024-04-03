@@ -9,7 +9,7 @@ from functools import reduce
 class myData:
 
   def __init__(self):
-    self.SP500Tickers, self.today_date, self.year_ago_date, self.month_ago_date, self.thisyear, self.lastyear, self.twoyearago, self.db, self.SP500IDs = None, None, None, None, None, None, None, None, None
+    self.SP500Tickers, self.today_date, self.year_ago_date, self.month_ago_date, self.thisyear, self.lastyear, self.twoyearago, self.db = None, None, None, None, None, None, None, None
 
   def get_dates(self):
     today = datetime.date.today()
@@ -28,15 +28,8 @@ class myData:
     one_month_ago = today_date - relativedelta(months=1)
     twoago = lastyear - 1
     return today_date, year_ago_date, thisYear, lastyear, one_month_ago, twoago
-
-
-  def get_SP500_companies(self) -> pd.DataFrame:
-    url = 'https://www.ssga.com/us/en/intermediary/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-spy.xlsx'
-    frame = pd.read_excel(url, engine='openpyxl', usecols=['Ticker'], skiprows=4).dropna()
-    return tuple(frame['Ticker'])
-  
              
-  def get_hist_SP500_companies(self) -> tuple:
+  def get_SP500_companies(self) -> tuple:
     combined_query = f"""
     SELECT c.tic as ticker
     FROM crsp_a_ccm.ccm_lookup c
@@ -47,12 +40,7 @@ class myData:
     result = self.db.raw_sql(combined_query)
     return tuple(result['ticker'].drop_duplicates().reset_index(drop=True))
 
-  
-  def get_SP500_IDs(self):
-    id_ticker = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT ticker, MIN(boardid) AS boardid FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers} GROUP BY ticker")))
-    return tuple(id_ticker['boardid'])
     
-  
   def output_excel_file(self, database, filename):
     excel_file_path = os.path.join(os.getcwd(), filename)
     database.to_excel(excel_file_path, index=False)
@@ -60,19 +48,11 @@ class myData:
 
   def count_committees(self):
     dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, AUDIT_MEMBERSHIP, CG_MEMBERSHIP, COMP_MEMBERSHIP, NOM_MEMBERSHIP, YEAR, CUSIP FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
-
     boardsize = dataframe.groupby('ticker').size().reset_index(name='boardsize')
-
-    #Not using number of committees anymore
-    #membership_columns = ['audit_membership', 'cg_membership', 'comp_membership', 'nom_membership']
-    #total_memberships = dataframe.groupby('ticker')[membership_columns].apply(lambda x: (x.notna().sum() > 0).sum()).reset_index(name='total_memberships')
-    #return pd.merge(total_memberships, boardsize, on='ticker', how='inner')
-
     return boardsize
 
 
   def is_CEO_Dual(self):
-    # % should be roughly 44%, so 327/790 = 41% -- is good
     dataframe = pd.DataFrame(data=(self.db.raw_sql(f"SELECT TICKER, EMPLOYMENT_CEO, EMPLOYMENT_CHAIRMAN FROM risk.rmdirectors WHERE YEAR BETWEEN '{self.lastyear}' AND '{self.thisyear}' AND TICKER IN {self.SP500Tickers}")))
     com_data = []
     for index, row in dataframe.iterrows():
@@ -81,12 +61,12 @@ class myData:
           com_data.append({'ticker': row['ticker'], 'CEODuality': 1})
         else:
           com_data.append({'ticker': row['ticker'], 'CEODuality': 0})
-                  
+                
     new_com_data = pd.DataFrame(com_data).drop_duplicates().reset_index(drop=True)
           
     rows_to_delete = []
     for index, row in new_com_data.iterrows():
-      if index < len(new_com_data) - 1:  # Ensure we don't go out of bounds
+      if index < len(new_com_data) - 1:
           next_row = new_com_data.iloc[index + 1]          
           if row['ticker'] == next_row['ticker']:
               if row['CEODuality'] == 1:           
@@ -100,7 +80,6 @@ class myData:
 
   def gender_ratio(self):
     two_year_ago_date = self.today_date.replace(year=self.lastyear - 1)
-    #two_year_ago_date = datetime.date.today().replace(year=2022)
     OrgSummary = pd.DataFrame(data=(self.db.raw_sql(f"SELECT Ticker, NumberDirectors, GenderRatio, NationalityMix, Annualreportdate FROM boardex.na_wrds_org_summary WHERE Annualreportdate BETWEEN '{two_year_ago_date}' AND '{self.today_date}' AND Ticker IN {self.SP500Tickers}")))
     
     sorted_OrgSummary = OrgSummary.dropna().sort_values(by=['ticker', 'annualreportdate'], ascending=[True, False])
@@ -117,10 +96,6 @@ class myData:
 
     fixed_outstanding['tobinsQ'] = fixed_outstanding['mkvalt'] / fixed_outstanding['at']
 
-    #gives 2.08 average which should be 1.4 according to today's stats.
-    print(fixed_outstanding['tobinsQ'].mean())
-
-    #returning only ticker and tobinsQ
     return fixed_outstanding[['ticker', 'tobinsQ']]
   
 
@@ -145,9 +120,6 @@ class myData:
     .reset_index(name='num_directors_>4.5'))
 
     result_df = dataframe.groupby('ticker').agg(
-    #high_voting_power=('pcnt_ctrl_votingpower', lambda x: (x >= 10).sum()),
-      
-    #voting power is the percentage directors with a voting power greater than 0
     voting_power=('pcnt_ctrl_votingpower', lambda x: round(((x > 0).mean() * 100), 1)),
     percentage_INEDs=('classification', lambda x: round((x.isin(['I-NED', 'I', 'NI-NED'])).mean() * 100, 1))
     ).reset_index()
@@ -162,13 +134,6 @@ class myData:
     
     return final_df
   
-  
-    #Not using this anymore
-    """   def market_cap(self):
-    #In millions
-    mcap = pd.DataFrame(data=(self.db.raw_sql(f"SELECT DISTINCT ticker, MAX(mktcapitalisation) as mktcapitalisation FROM boardex.na_wrds_company_profile WHERE ticker IN {self.SP500Tickers} GROUP BY ticker")))
-    mcap = mcap.dropna().reset_index(drop=True)
-    return mcap """
 
   
   def dualclass(self):
@@ -192,11 +157,8 @@ class myData:
     committees = self.count_committees()
     ceo = self.is_CEO_Dual()
     director_powerful = self.director_power()
-    #mcap = self.market_cap()
     tobinsQ = self.tobinsQ()
     genderRatio = self.gender_ratio()
-    
-    #print(len(dualclass), len(committees), len(ceo), len(director_powerful), len(tobinsQ), len(genderRatio), self.thisyear)
 
     dfs = [genderRatio, director_powerful, committees, tobinsQ, ceo, dualclass]
     total_dataset = reduce(lambda left, right: pd.merge(left, right, on='ticker', how='inner'), dfs)
@@ -207,6 +169,11 @@ class myData:
     final.rename(columns={'genderratio': 'Gender Ratio', 'nationalitymix' : 'Minority Ratio', 'voting_power' : 'VotePower', 'percentage_INEDs' : '%INEDS', 'num_directors_>4.5' : 'Number Directors\' Own>4.5', 'total_share_%' : 'Board Ownership', 'boardsize': 'Board Size', 'CEODuality' : 'CEO Dual', 'dualclass' : 'Dualclass Voting'}, inplace=True)
      
     return final
+  
+def MCDA_dataset(df):
+  df['Board Size Mean'] = df['Board Size'].sub(df['Board Size'].mean()).abs()
+  del df['Board Size']
+  return df
 
 
 def past_data(year, conn):
@@ -214,8 +181,7 @@ def past_data(year, conn):
   inst = myData()
   inst.db = conn
   inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date, inst.twoyearago = inst.set_dates(year)
-  inst.SP500Tickers = inst.get_hist_SP500_companies()
-  inst.SP500IDs = inst.get_SP500_IDs()
+  inst.SP500Tickers = inst.get_SP500_companies()
   final_dataset = inst.combine_data()
   
   return final_dataset
@@ -226,11 +192,12 @@ def main():
   inst = myData()
   inst.db = wrds.Connection(wrds_username="twhittome")
   inst.today_date, inst.year_ago_date, inst.thisyear, inst.lastyear, inst.month_ago_date, inst.twoyearago = inst.get_dates()
-  inst.SP500Tickers = inst.get_hist_SP500_companies()
-  inst.SP500IDs = inst.get_SP500_IDs()
+  inst.SP500Tickers = inst.get_SP500_companies()
   final_dataset = inst.combine_data()
   final_dataset.dropna(inplace=True)
-  inst.output_excel_file(final_dataset, 'dataset/final_dataset.xlsx')
+  inst.output_excel_file(final_dataset, 'Data/final_dataset.xlsx')
+  inst.output_excel_file(MCDA_dataset(final_dataset), 'Data/mcda_dataset.xlsx')
+  
 
   end = time.time()
   print("The time of execution of above program is :",
