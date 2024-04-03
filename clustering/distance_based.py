@@ -65,6 +65,10 @@ def get_year_ranges(years):
 
 
 plt.figure(figsize=(8, 8))
+clusternames = ['A', 'B', 'C']
+cluster_colours = ['#b4d2b1', '#568f8b', '#1d4a60']
+cluster_colours = ['#f24834', '#fb8c6c', '#c0151a']
+
 
 for yi in range(n_clusters):
     plt.subplot(n_clusters, 1, yi + 1)
@@ -78,15 +82,15 @@ for yi in range(n_clusters):
         plt.plot(datasets_scaled[ix].ravel(), "k-", alpha=0.2)
         plotted_years.append(years[ix])
     
-    plt.plot(model.cluster_centers_[yi].ravel(), "r-", label='Cluster Center')
+    plt.plot(model.cluster_centers_[yi].ravel(), f'{cluster_colours[yi]}', label='Cluster Center')
     plt.xlim(0, datasets_scaled.shape[1])
     plt.ylim(-4, 4)
-    plt.title(f"Cluster {yi + 1}", fontweight='bold')
+    plt.title(f"Cluster {clusternames[yi]}", fontweight='bold')
     
     year_ranges_label = f"Years: {', '.join(get_year_ranges(plotted_years))}"
     
     black_line = mlines.Line2D([], [], color='black', label=year_ranges_label)
-    red_line = mlines.Line2D([], [], color='red', label='Cluster Center')
+    red_line = mlines.Line2D([], [], color=f'{cluster_colours[yi]}', label='Cluster Center')
     plt.legend(handles=[black_line, red_line], loc="upper left", prop={'weight':'bold'})
 
 plt.subplots_adjust(left=0.03, right=0.98, top=0.95, bottom=0.05, hspace=0.5)

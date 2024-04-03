@@ -38,19 +38,23 @@ def get_silhouette_score(data):
 
 def magandcardinailty(data, km_fit):
   cluster_colors = ['#b4d2b1', '#568f8b', '#1d4a60', '#cd7e59', '#ddb247', '#d15252']
-  fig, (ax1, ax2, ax3) = plt.subplots(1,3,figsize=(12,4))
+  fig, (ax1, ax2) = plt.subplots(1,2,figsize=(8,4))
   print(km_fit.labels_)
 
-  #plot_cluster_cardinality(km_fit.labels_, ax=ax1, title="Cardinality", color=cluster_colors)
+  """   #plot_cluster_cardinality(km_fit.labels_, ax=ax1, title="Cardinality", color=cluster_colors)
   values, counts = np.unique(km_fit.labels_, return_counts=True)
-  ax1.set_title("Cardinality")
-  ax1.bar(values, counts, color=cluster_colors, width=0.5)
+  ax1.set_title("Cardinality", fontweight='bold')
+  ax1.set_xlabel("Cluster Label", fontweight='bold')
+  ax1.set_ylabel("Number of observations", fontweight='bold')
+  ax1.set_xticks([0, 1, 2]) 
+  ax1.set_xticklabels(['A', 'B', 'C']) 
+  ax1.bar(values, counts, color=cluster_colors, width=0.5) """
   
   plot_cluster_magnitude(data,
                         km_fit.labels_,
                         km_fit.cluster_centers_,
                         euclidean,
-                        ax=ax2,
+                        ax=ax1,
                         title="Magnitude",
                         color=cluster_colors
                         )
@@ -59,8 +63,17 @@ def magandcardinailty(data, km_fit):
                                 km_fit.cluster_centers_,
                                 euclidean,
                                 color=cluster_colors[0:km_fit.n_clusters],
-                                ax=ax3, 
+                                ax=ax2, 
                                 title="Magnitude vs. Cardinality")
+  
+  ax1.set_title("Magnitude", fontweight='bold')
+  ax1.set_xlabel("Cluster Label", fontweight='bold')  # Replace "Your X Label" with the actual label
+  ax1.set_ylabel("Total Point-to-Centroid Distance", fontweight='bold')
+  ax1.set_xticklabels(['A', 'B', 'C']) 
+
+  ax2.set_title("Magnitude vs. Cardinality", fontweight='bold')
+  ax2.set_xlabel("Cardinality", fontweight='bold')  # Again, replace with the actual X label
+  ax2.set_ylabel("Magnitude", fontweight='bold') 
 
   fig.autofmt_xdate(rotation=0)
   plt.tight_layout()
@@ -69,8 +82,9 @@ def magandcardinailty(data, km_fit):
   
 def get_finaldset():
   df = pd.read_excel('dataset/final_dataset.xlsx')
-  df.rename(columns={'Number Directors\'Own>4.5':'Directors>4.5'}, inplace=True)
-  columns_to_cluster = ['Gender Ratio', 'Minority Ratio', 'VotePower', '%INEDS', 'Directors>4.5', 'Board Ownership', 'Board Size', 'CEO Dual', 'Dualclass Voting']
+  df.rename(columns={'Number Directors\'Own>4.5':'Blockholders', 'Minority Ratio' : 'Ethnicity Ratio', 'VotePower' : 'Vote Power'}, inplace=True)
+  print(df)
+  columns_to_cluster = ['Gender Ratio', 'Ethnicity Ratio', 'Vote Power', '%INEDS', 'Blockholders', 'Board Ownership', 'Board Size', 'CEO Dual', 'Dualclass Voting']
   scaler = StandardScaler()
   data_scaled = scaler.fit_transform(df[columns_to_cluster])
   #data_scaled = apply_PCA(data_scaled)
@@ -100,20 +114,6 @@ def apply_PCA(data):
   columns = [f'PC{i+1}' for i in range(data_pca.shape[1])]
   data_pca = pd.DataFrame(data_pca, columns=columns)
   return data_pca
-
-def ElbowVis(data):
-  fig, ax = plt.subplots()
-  visualizer = KElbowVisualizer(KMeans(), k=(2,7),ax=ax)
-  visualizer.fit(data)
-  ax.set_xticks(range(2,7), fontweight='bold')
-  ax.set_yticks(range(2200, 4000, 200), fontweight='bold')
-  ax.set_xlabel('K', fontsize=16, fontweight='bold')
-  ax.set_ylabel('Distortion Score', fontsize=16, fontweight='bold') 
-  ax.set_title('', fontsize=18, fontweight='bold')
-  #Mak
-  plt.subplots_adjust(top=0.995)
-  visualizer.show()
-  plt.show()
 
             
 
@@ -184,9 +184,10 @@ def cluster_comparison_bar(X_comparison, colors, raw_data, deviation=True ,title
     plt.show()
     
 def create_singular(X_dev_rel):
-  colors = ['#775b59','#9EBD6E','#81a094','#32161f', '#957DAD', '#DE9E36','#fe938c','#37323E','#95818D']
+  colors = ['#3a4cc0', '#6181e9', '#8daffd', '#b8cff9', '#1f77b4', '#f4c4ac', '#f4997a', '#dd604c', '#b30326']
+  #colors = ['#775b59','#9EBD6E','#81a094','#32161f', '#957DAD', '#DE9E36','#fe938c','#37323E','#95818D']
 
-  fig = plt.figure(figsize=(12,5), dpi=200)
+  fig = plt.figure(figsize=(11,5), dpi=200)
   ax1= fig.add_subplot()
   X_dev_rel.T.plot(kind='bar', 
                         ax=ax1, 
@@ -200,6 +201,7 @@ def create_singular(X_dev_rel):
   
   ax1.set_xlabel("Cluster", fontsize=12, fontweight='bold')
   ax1.set_ylabel("Deviation from overall mean in %", fontsize=12, fontweight='bold')
+  ax1.set_xticklabels(['A', 'B', 'C'])
   #ax1.tick_params(axis='x', labelsize=10, labelrotation=0, labelweight='bold')
   #ax1.tick_params(axis='y', labelsize=10, labelweight='bold')
   
@@ -245,24 +247,30 @@ class Radar(object):
 def OG_elbow(data):
   # Elbow method to find the optimal number of clusters
   sse = []
-  for k in range(1, 11):
+  for k in range(1, 7):
       kmeans = KMeans(n_clusters=k, random_state=42).fit(data)
       sse.append(kmeans.inertia_)
 
   # Plot SSE for each *k*
   plt.figure(figsize=(10, 6))
-  plt.plot(range(1, 11), sse, marker='o')
-  plt.title('Elbow Method')
-  plt.xlabel('Number of clusters')
-  plt.ylabel('SSE')
+  """ sse[0] = 4600
+  sse[1] = 4050
+  sse[2] = 3200
+  sse[4] = 2700 """
+  plt.plot(range(1, 7), sse, marker='o')
+  plt.axvline(x=3, color='black', linestyle='--')
+  plt.xlabel('Number of clusters', fontweight='bold', fontsize=16)
+  plt.ylabel('SSE', fontweight='bold', fontsize=16)
+  plt.xticks(fontweight='bold')
+  plt.yticks(fontweight='bold')
   plt.show()
+
 
 #Main
 #raw_data, data = get_factor_loadings()
 raw_data, data = get_finaldset()
 
-ElbowVis(data)
-#OG_elbow(data)
+OG_elbow(data)
 #get_silhouette_score(data)
 
 km = KMeans(n_clusters=3, 
@@ -310,12 +318,12 @@ fig = plt.figure(figsize=(8, 8))
 no_features = len(km.feature_names_in_)
 radar = Radar(fig, km.feature_names_in_, np.unique(km.labels_))
 
+clusternames = ['A', 'B', 'C']
 for k in range(0,km.n_clusters):
     cluster_data = X_std_mean[k].values.tolist()
-    radar.plot(cluster_data,  '-', lw=2, color=cluster_colors[k], alpha=0.7, label='cluster {}'.format(k))
+    radar.plot(cluster_data,  '-', lw=2, color=cluster_colors[k], alpha=0.7, label=f'Cluster {clusternames[k]}'.format(k))
 
-#radar.ax.legend(fontsize=14, fontweight='bold')
+
 radar.ax.legend(prop={'size': 14, 'weight': 'bold'}, markerscale=4, loc='upper right', bbox_to_anchor=(1.1, 1.05))
-#radar.ax.set_title("Cluster characteristics: Feature means per cluster", size=22, pad=60)
 fig.subplots_adjust(left=0.05, right=0.95)
-#plt.show()
+plt.show()

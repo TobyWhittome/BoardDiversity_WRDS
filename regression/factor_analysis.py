@@ -53,7 +53,8 @@ def create_heatmap(df, varifa):
 
 
 df = pd.read_excel('dataset/final_dataset.xlsx')
-df.rename(columns={'Number Directors\'Own>4.5' : 'Number Directors\' Own>4.5'}, inplace=True)
+df.rename(columns={'Number Directors\'Own>4.5':'Blockholders', 'Minority Ratio' : 'Ethnicity Ratio', 'VotePower' : 'Vote Power'}, inplace=True)
+#df.rename(columns={'Number Directors\'Own>4.5' : 'Number Directors\' Own>4.5'}, inplace=True)
 df.drop(columns=['ticker'], inplace=True)
 #df.drop(columns=['mktcapitalisation'], inplace=True)
 #create a 1D array of Tobin's Q

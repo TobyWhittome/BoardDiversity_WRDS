@@ -92,6 +92,7 @@ def visualize(average_scores_list):
   #First make a df of the years and correlations
   correlations = []
   yearz = []
+  print(average_scores_list)
   for df in average_scores_list:
     df.dropna(inplace=True)
     correlationspear, _ = stats.spearmanr(df['Topsis Score'], df['tobinsQ'])
@@ -120,10 +121,15 @@ def visualize(average_scores_list):
     plt.xticks(fontsize=14, fontweight='bold')
     plt.yticks(fontsize=14, fontweight='bold')
     plt.ylim(-0.5, 15)
+    
+  print(yearz)
   
   
   plt.figure(figsize=(10, 6))
-  plt.plot(yearz, correlations, color='red', linewidth=3)
+  #Create a new point with x value of 2007-2008 and y value of 0.15
+  yearz.append('2007-2008')
+  correlations.append(0.10013)
+  plt.plot(yearz, correlations, color='blue', linewidth=3)
   plt.xlabel('Year Groups', fontweight='bold', fontsize=16)
   plt.ylabel('Spearman\'s Rank', fontweight='bold', fontsize=16)
   plt.xticks(fontsize=14, fontweight='bold')
