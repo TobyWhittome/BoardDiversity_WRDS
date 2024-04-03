@@ -31,15 +31,6 @@ def average_scores():
     yearname3 = f'{year-2}_dataset'
     df3_og = pd.read_excel(f'mcda_prev_data/{yearname3}.xlsx')
 
-    """ print(f"Year {year}")
-    print(df_og)
-    print(f'Year {year-1}')
-    print(df2_og)
-    print(f'Year {year-2}')
-    print(df3_og) """
-
-
-    #Perform MCDA on all of them
     mcda_df, corr = mcda.main(df_og, [])
     mcda_df2, corr = mcda.main(df2_og, [])
     mcda_df3, corr = mcda.main(df3_og, [])
@@ -59,13 +50,11 @@ def average_scores():
 
     for df in dataframes:
         if len(df) < largest:
-            # Create a DataFrame filled with zeros, with the required number of rows to match 'largest'
             zeros_df = pd.DataFrame(0, index=range(largest - len(df)), columns=df.columns)
-            # Use pandas.concat to append the zeros_df to df
             modified_df = pd.concat([df, zeros_df]).reset_index(drop=True)
-            modified_dfs.append(modified_df)  # Add the modified dataframe to the list
+            modified_dfs.append(modified_df)  
         else:
-            modified_dfs.append(df)  # Add the unmodified dataframe if it's already the largest
+            modified_dfs.append(df)  
 
     mcda_df, mcda_df2, mcda_df3 = modified_dfs
 
@@ -84,12 +73,10 @@ def average_scores():
   return average_scores_list
 
 
-#So I need to get the Average Tobin's Q values in as well?
 
 def visualize(average_scores_list):
   
   #Plot correlations against years
-  #First make a df of the years and correlations
   correlations = []
   yearz = []
   print(average_scores_list)
@@ -122,13 +109,9 @@ def visualize(average_scores_list):
     plt.yticks(fontsize=14, fontweight='bold')
     plt.ylim(-0.5, 15)
     
-  print(yearz)
   
   
   plt.figure(figsize=(10, 6))
-  #Create a new point with x value of 2007-2008 and y value of 0.15
-  yearz.append('2007-2008')
-  correlations.append(0.10013)
   plt.plot(yearz, correlations, color='blue', linewidth=3)
   plt.xlabel('Year Groups', fontweight='bold', fontsize=16)
   plt.ylabel('Spearman\'s Rank', fontweight='bold', fontsize=16)

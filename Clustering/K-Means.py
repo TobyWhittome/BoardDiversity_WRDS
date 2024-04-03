@@ -207,10 +207,6 @@ def OG_elbow(data):
 
   # Plot SSE for each *k*
   plt.figure(figsize=(10, 6))
-  """ sse[0] = 4600
-  sse[1] = 4050
-  sse[2] = 3200
-  sse[4] = 2700 """
   plt.plot(range(1, 7), sse, marker='o')
   plt.axvline(x=3, color='black', linestyle='--')
   plt.xlabel('Number of clusters', fontweight='bold', fontsize=16)
