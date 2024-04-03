@@ -1,3 +1,5 @@
+#This file will perform K-means clustering on the factor loadings from the previous factor analysis. The optimal number of clusters will be determined using the elbow method, and the silhouette score will be calculated for the initially chosen number of clusters.
+
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
