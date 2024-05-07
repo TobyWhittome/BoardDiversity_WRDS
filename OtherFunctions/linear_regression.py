@@ -8,7 +8,7 @@ def myfunc(x):
   return slope * x + intercept
 
 
-df = pd.read_excel('dataset/transformed_dataset.xlsx')
+df = pd.read_excel('Data/mcda_dataset.xlsx')
 y = df['tobinsQ']
 df.drop(columns=['ticker'], inplace=True)
 #df.drop(columns=['mktcapitalisation'], inplace=True)
@@ -38,7 +38,9 @@ for col in df.columns:
 
   plt.scatter(x, y)
   plt.plot(x, mymodel)
-  plt.title(variable)
+  #plt.title(variable)
+  plt.xlabel(variable, fontweight='bold', fontsize=12)
+  plt.ylabel('Tobin\'s Q', fontweight='bold', fontsize=12)
   
   #print(x.min(), x.max())
   #print(y.min(), y.max())
